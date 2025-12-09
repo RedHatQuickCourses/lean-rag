@@ -1,0 +1,12 @@
+#  Module 3: High-Performance Serving with vLLM & llm-d
+
+```
+== Module 3: High-Performance Serving with vLLM & llm-d
+
+This module focuses on optimizing the serving of large language models (LLMs) for high performance. Key topics include:
+
+- **Configuring vLLM for Maximum Throughput**: Learn how to use PagedAttention and Continuous Batching to enhance vLLM's throughput.
+- **Tuning vLLM Engine Arguments**: Understand the impact of adjusting engine arguments like `--gpu-memory-utilization` and `--max-num-seqs` on performance.
+- **Distributed Inference with llm-d**: Discover how to deploy distributed inference, separating prefill and decode phases (disaggregation) for improved efficiency.
+- **Implementing Prefix Caching**: Explore the use of prefix caching to reuse Key-Value (KV) cache for RAG system prompts, further optimizing performance.
+```

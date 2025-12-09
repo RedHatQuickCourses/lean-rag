@@ -1,22 +1,29 @@
-= An Example Quick Course
+=  Lean RAG Accelerator QuickStart Training
 :navtitle: Home
 
 == Introduction
 
-Course Title: Course title FIXME
+Course Title:  Lean RAG Accelerator QuickStart Training
 
 Description:
 Course description FIXME
 
 Duration: FIXME hours
 
-== Objectives
+== Topics covered in this course
 
-On completing this course, you should be able to:
 
-* Observable, measurable objective...
-* Observable, measurable objective...
-* Observable, measurable objective...
+*  Module 1: Inference Economics & RHOAI 3.0 Architecture
+
+*  Module 2: Model Optimization with LLM Compressor
+
+*  Module 3: High-Performance Serving with vLLM & llm-d
+
+*  Module 4: Standardized RAG Implementation
+
+*  Module 5: Validation & Benchmarking
+
+
 
 == Prerequisites
 

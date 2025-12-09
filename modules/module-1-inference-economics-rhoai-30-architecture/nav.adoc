@@ -1,0 +1,5 @@
+* xref:module-1-inference-economics-rhoai-30-architecture.adoc[]
+** xref:analysis-of-the-impossible-trinity-in-llm-deployments-balancing-accuracy-latency-and-cost.adoc[]
+** xref:identifying-critical-gpu-underutilization-and-the-role-of-memory-management-in-inference-costs.adoc[]
+** xref:overview-of-the-red-hat-ai-30-ai-factory-approach-for-industrialized-model-serving.adoc[]
+** xref:mapping-the-rhoai-30-inference-stack-vllm-llm-d-and-kserve-integration.adoc[]

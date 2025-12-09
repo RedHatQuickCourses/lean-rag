@@ -1,0 +1,4 @@
+* xref:module-5-validation-benchmarking.adoc[]
+** xref:defining-service-level-objectives-slos-for-time-to-first-token-ttft-and-inter-token-latency-itl.adoc[]
+** xref:simulating-real-world-traffic-load-using-guidellm-to-validate-throughput-gains.adoc[]
+** xref:comparing-performance-metrics-throughput-vs-latency.adoc[]

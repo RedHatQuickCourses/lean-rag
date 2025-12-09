@@ -1,0 +1,37 @@
+#  configuring vLLM for maximum throughput using PagedAttention and Continuous Batching
+
+```
+= Configuring vLLM for Maximum Throughput Using PagedAttention and Continuous Batching
+
+== Objective
+
+In this section, we will explore techniques to optimize the performance of vLLM for maximum throughput using PagedAttention and Continuous Batching.
+
+== PagedAttention
+
+PagedAttention is a method used in large language models (LLMs) to manage memory usage and improve inference speed. It divides the input sequence into smaller pages, allowing the model to process each page independently. This approach significantly reduces the memory footprint and enables the model to handle longer sequences.
+
+To configure vLLM with PagedAttention:
+
+1. Set the `paged_attention` flag to `true` in the vLLM configuration file.
+2. Define the `page_size` parameter to specify the number of tokens in each page. A larger page size can improve throughput but may increase memory usage.
+3. Adjust the `attention_layers` parameter to control the depth of attention mechanisms applied within each page.
+
+== Continuous Batching
+
+Continuous Batching is a technique that allows vLLM to maintain a continuous stream of inference requests, reducing the overhead associated with batching new requests. This method is particularly effective when dealing with real-time or low-latency applications.
+
+To enable Continuous Batching in vLLM:
+
+1. Set the `continuous_batching` flag to `true` in the vLLM configuration file.
+2. Define the `batch_size` parameter to specify the number of inference requests to process in each batch. A larger batch size can improve throughput but may increase latency.
+3. Adjust the `prefetch_factor` parameter to control the number of batches prefetched ahead of the current one. Increasing this value can help maintain a steady inference rate but may consume more memory.
+
+== Hands-on Activity: Optimizing vLLM with PagedAttention and Continuous Batching
+
+1. Locate the vLLM configuration file (e.g., `vllm.yaml`).
+2. Modify the configuration file to include PagedAttention and Continuous Batching settings as described above.
+3. Test the optimized vLLM configuration with a representative workload to measure throughput improvements.
+4. Adjust the `page_size`, `batch_size`, and `prefetch_factor` parameters iteratively to find the optimal balance between throughput and resource usage.
+
+== Troubleshooting

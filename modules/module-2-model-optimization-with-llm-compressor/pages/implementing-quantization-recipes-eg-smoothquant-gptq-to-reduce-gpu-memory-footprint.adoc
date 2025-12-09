@@ -1,0 +1,62 @@
+#  Implementing quantization recipes (e.g., SmoothQuant, GPTQ) to reduce GPU memory footprint
+
+```
+= Implementing Quantization Recipes to Reduce GPU Memory Footprint
+
+== Objective: Model Optimization with LLM Compressor
+
+Quantization is a crucial technique for model compression, enabling the reduction of GPU memory footprint without significantly impacting model accuracy. This section focuses on two popular quantization recipes: SmoothQuant and GPTQ.
+
+=== 1. Understanding Quantization
+
+Quantization is the process of converting continuous values (like floating-point numbers) into discrete values (like integers). In the context of deep learning, this means reducing the precision of weights and activations, thereby decreasing the model's memory footprint and increasing inference speed.
+
+=== 2. SmoothQuant
+
+SmoothQuant is a quantization method that aims to minimize the accuracy loss during the quantization process. It introduces a small amount of noise to the activations before quantization, which helps to preserve the model's performance.
+
+*Steps to implement SmoothQuant:*
+
+1. Install the required libraries: `pip install torch numpy`
+2. Import necessary modules:
+
+   ```python
+   import torch
+   import numpy as np
+   from llm_compressor.quantization.smoothquant import SmoothQuant
+   ```
+
+3. Initialize the SmoothQuant object and apply it to your model:
+
+   ```python
+   model = YourModel()  # Replace with your model
+   smoothquant = SmoothQuant(model)
+   quantized_model = smoothquant.quantize()
+   ```
+
+=== 3. GPTQ
+
+GPTQ (Post-Training Quantization) is another effective quantization technique that quantizes a pre-trained model without retraining. It uses a calibration process to determine the optimal quantization parameters for each layer.
+
+*Steps to implement GPTQ:*
+
+1. Install the required libraries: `pip install torch numpy`
+2. Import necessary modules:
+
+   ```python
+   import torch
+   import numpy as np
+   from llm_compressor.quantization.gptq import GPTQ
+   ```
+
+3. Initialize the GPTQ object and apply it to your model:
+
+   ```python
+   model = YourModel()  # Replace with your model
+   gptq = GPTQ(model)
+   quantized_model = gptq.quantize()
+   ```
+
+=== 4. Validated Pre-Optimized Models
+
+Red Hat provides pre-optimized

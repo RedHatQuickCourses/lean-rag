@@ -1,0 +1,42 @@
+#  Deploying distributed inference with llm-d to separate prefill and decode phases (disaggregation)
+
+```
+= Deploying Distributed Inference with llm-d
+
+== Objective: Module 3: High-Performance Serving with vLLM & llm-d
+
+In this module, we will focus on deploying distributed inference using llm-d to separate the prefill and decode phases, a technique known as disaggregation. This approach allows for more efficient resource utilization and improved performance in large-scale inference deployments.
+
+=== 3.3 Deploying Distributed Inference with llm-d
+
+llm-d is a high-performance inference serving framework designed to handle large language models (LLMs) efficiently. It enables the separation of the prefill and decode phases, which are computationally intensive and can benefit from parallel processing.
+
+=== 3.3.1 Understanding Prefill and Decode Phases
+
+In the context of LLMs, the prefill phase involves loading the context into the model, while the decode phase generates the output based on the loaded context. By separating these phases, we can optimize resource allocation and reduce latency.
+
+=== 3.3.2 Deploying llm-d for Disaggregation
+
+To deploy distributed inference with llm-d, follow these steps:
+
+1. **Install llm-d**: Ensure llm-d is installed and configured in your environment. Refer to the official llm-d documentation for installation instructions.
+
+2. **Prepare Your Model**: Ensure your LLM model is compatible with llm-d. This typically involves wrapping your model with a compatible serving interface, such as the Hugging Face Transformers `Pipeline` class.
+
+3. **Configure llm-d**: Create a configuration file for llm-d, specifying the number of workers for prefill and decode phases. For example:
+
+   ::code-block[yaml]
+   workers:
+     prefill: 4
+     decode: 4
+
+4. **Start llm-d**: Launch llm-d with your configuration file:
+
+   ::code-block[shell]
+   llm-d --config /path/to/your/config.yaml
+
+5. **Send Inference Requests**: Use the llm-d client to send inference requests. The client will automatically route prefill and decode requests to the respective workers.
+
+=== 3.3.3 Tuning llm-d for Optimal Performance
+
+To further optimize performance, consider the following tuning options:

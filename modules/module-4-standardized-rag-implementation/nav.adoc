@@ -1,0 +1,5 @@
+* xref:module-4-standardized-rag-implementation.adoc[]
+** xref:ingesting-and-chunking-unstructured-enterprise-data-pdfs-using-docling.adoc[]
+** xref:orchestrating-rag-workflows-using-the-llama-stack-api-for-standardized-response-generation-and-vector-io.adoc[]
+** xref:integrating-vector-databases-eg-milvus-chroma-via-llama-stack-providers.adoc[]
+** xref:deploying-the-rag-application-stack-using-gitops-and-argocd-for-repeatability.adoc[]

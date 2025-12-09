@@ -1,0 +1,32 @@
+#  Overview of the Red Hat AI 3.0 "AI Factory" approach for industrialized model serving
+
+```
+= Overview of the Red Hat AI 3.0 "AI Factory" Approach for Industrialized Model Serving
+
+== Introduction
+
+The Red Hat AI 3.0 "AI Factory" approach represents a significant evolution in the industrialization of model serving. It encapsulates a comprehensive strategy for deploying, managing, and scaling AI models in a production environment, ensuring efficiency, reliability, and cost-effectiveness.
+
+== Core Principles of the AI Factory
+
+The AI Factory is built on several core principles:
+
+1. **Standardization**: The AI Factory promotes the use of standardized components and processes to ensure consistency and repeatability in model serving. This includes the use of containerized models, standardized APIs, and uniform data ingestion pipelines.
+
+2. **Automation**: Automation is a key pillar of the AI Factory. It involves automating model deployment, scaling, and monitoring to reduce manual intervention and human error. This is achieved through the use of GitOps, ArgoCD, and other DevOps tools.
+
+3. **Scalability**: The AI Factory is designed to handle the scalability demands of production AI workloads. It leverages distributed systems and horizontal scaling to manage increased model serving requests without compromising performance.
+
+4. **Observability**: The AI Factory emphasizes the importance of monitoring and logging in production environments. This allows for real-time tracking of model performance, resource utilization, and other critical metrics, enabling proactive issue resolution and continuous improvement.
+
+== Key Components of the AI Factory
+
+The AI Factory comprises several key components:
+
+1. **Model Catalog**: A repository of validated, pre-optimized models, such as Lean Llama, that can be directly used for inference. This eliminates the need for custom model optimization for each deployment.
+
+2. **LLM Compressor**: A tool for model compression, enabling the creation of optimized "ModelCars" (containerized models) with reduced memory footprint. It uses techniques like quantization and sparsity to achieve this.
+
+3. **vLLM & llm-d**: These are the core inference engines in the AI Factory. vLLM is optimized for maximum throughput, while llm-d enables distributed inference, separating the prefill and decode phases for improved efficiency.
+
+4. **Llama Stack API**: This API provides a standardized interface

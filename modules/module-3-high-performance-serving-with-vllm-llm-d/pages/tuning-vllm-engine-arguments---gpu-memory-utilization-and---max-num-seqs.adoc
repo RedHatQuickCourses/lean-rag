@@ -1,0 +1,26 @@
+#  tuning vLLM engine arguments: `--gpu-memory-utilization` and `--max-num-seqs`
+
+```
+= Tuning vLLM Engine Arguments: `--gpu-memory-utilization` and `--max-num-seqs`
+
+== Objective: High-Performance Serving with vLLM & llm-d
+
+In this section, we will delve into the crucial aspect of optimizing the vLLM engine performance by tuning its key arguments: `--gpu-memory-utilization` and `--max-num-seqs`. These parameters play a significant role in maximizing throughput and ensuring efficient utilization of GPU resources during inference.
+
+=== 1. Understanding `--gpu-memory-utilization`
+
+The `--gpu-memory-utilization` argument controls the percentage of GPU memory that vLLM can use for inference tasks. By default, it is set to 100%, meaning vLLM will utilize the entire available GPU memory. However, in scenarios where multiple inference tasks are running concurrently or when other GPU-intensive processes are active, limiting the GPU memory usage can prevent resource contention and ensure consistent performance.
+
+To tune this argument, consider the following guidelines:
+
+- **Monitor GPU memory usage**: Use tools like `nvidia-smi` to monitor GPU memory usage during inference. This will help you identify if there is a memory bottleneck or if there is unused memory that can be allocated to other tasks.
+- **Adjust the value**: Based on your monitoring, adjust the `--gpu-memory-utilization` value. A lower percentage (e.g., 80%) can help prevent memory contention, while a higher percentage (e.g., 90%) might be suitable if you have ample GPU memory and want to maximize throughput.
+
+=== 2. Tuning `--max-num-seqs`
+
+The `--max-num-seqs` argument defines the maximum number of sequences that vLLM can process in a single batch during inference. By default, this value is set to a relatively high number to maximize throughput. However, depending on the available GPU memory and the model size, this value might need to be adjusted to prevent out-of-memory errors.
+
+To tune this argument, consider the following guidelines:
+
+- **Estimate sequence size**: Determine the average size of the input sequences for your specific use case. This can be done by analyzing a representative sample of your inference workload.
+- **Monitor GPU memory usage**: Similar to the previous step, use `

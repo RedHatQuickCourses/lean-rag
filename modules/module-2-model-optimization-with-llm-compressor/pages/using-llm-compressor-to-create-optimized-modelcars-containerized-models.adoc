@@ -1,0 +1,49 @@
+#  Using LLM Compressor to create optimized "ModelCars" (containerized models)
+
+```
+= Using LLM Compressor to Create Optimized "ModelCars" (Containerized Models)
+
+== Objective: Model Optimization with LLM Compressor
+
+In this module, we will focus on optimizing large language models (LLMs) using the LLM Compressor tool to create efficient, containerized models known as "ModelCars." These optimized models will help reduce GPU memory footprint and improve inference performance.
+
+=== 1. Techniques for Model Compression
+
+To begin with, we will explore various model compression techniques, including:
+
+* **Quantization**: Converting high-precision floating-point numbers (FP32 or FP64) to lower-precision formats (e.g., FP8 or INT8) to reduce memory usage and increase inference speed.
+* **Sparsity**: Identifying and eliminating less important weights or connections in the model, which can significantly decrease memory footprint and computational requirements.
+
+=== 2. Using LLM Compressor to Create Optimized "ModelCars"
+
+The LLM Compressor is an essential tool for optimizing LLMs. Here's how to use it to create "ModelCars":
+
+1. Install LLM Compressor: Follow the installation instructions provided in the official documentation.
+2. Prepare your LLM: Ensure your LLM is compatible with LLM Compressor and is in a suitable format (e.g., Hugging Face Transformers).
+3. Compress the model: Run the LLM Compressor with appropriate quantization and sparsity settings. For example:
+
+   ::code-block python
+   python -m llm_compressor \
+   --model_name_or_path <path_to_your_model> \
+   --output_dir <output_directory> \
+   --quantization_method smoothquant \
+   --sparsity_method gptq
+
+4. Create a Dockerfile: To containerize the optimized model, create a Dockerfile that includes necessary dependencies and the compressed model.
+
+   ::code-block Dockerfile
+   FROM python:3.8-slim-buster
+
+   WORKDIR /app
+
+   COPY requirements.txt .
+   RUN pip install -r requirements.txt
+
+   COPY . .
+
+   CMD ["python", "inference.py"]
+
+   # Add your compressed model to the container
+   COPY --from=0 <compressed_model_path> /app/<model_name>
+
+5. Build the ModelCar image

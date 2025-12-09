@@ -1,0 +1,5 @@
+* xref:module-2-model-optimization-with-llm-compressor.adoc[]
+** xref:techniques-for-model-compression-quantization-fp8-int8-and-sparsity.adoc[]
+** xref:using-llm-compressor-to-create-optimized-modelcars-containerized-models.adoc[]
+** xref:implementing-quantization-recipes-eg-smoothquant-gptq-to-reduce-gpu-memory-footprint.adoc[]
+** xref:accessing-validated-pre-optimized-models-eg-lean-llama-from-the-red-hat-model-catalog.adoc[]

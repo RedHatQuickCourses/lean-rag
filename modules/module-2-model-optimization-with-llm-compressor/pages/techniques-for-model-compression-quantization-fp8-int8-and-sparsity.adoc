@@ -1,0 +1,30 @@
+#  Techniques for model compression: Quantization (FP8, INT8) and Sparsity
+
+```
+= Techniques for Model Compression: Quantization (FP8, INT8) and Sparsity
+
+== Introduction
+
+Model compression is a crucial aspect of deploying large language models (LLMs) in production environments. It involves reducing the model size and computational requirements without significantly impacting performance. This section focuses on two primary techniques for model compression: quantization (FP8, INT8) and sparsity.
+
+== Quantization (FP8, INT8)
+
+Quantization is the process of converting high-precision floating-point numbers (e.g., FP32) into lower-precision formats (e.g., FP8, INT8). This reduction in precision helps decrease memory footprint and accelerate computations.
+
+* **FP8 (Float-Point 8-bit)**: FP8 uses 8 bits to represent floating-point numbers, offering a balance between precision and memory savings. It is particularly effective for models with a wide dynamic range, such as those using the gelu activation function.
+
+* **INT8 (Integer 8-bit)**: INT8 represents integers using 8 bits, which is more memory-efficient than FP8. However, INT8 may introduce quantization errors, so it's essential to choose appropriate quantization algorithms and fine-tune the models accordingly.
+
+== Sparsity
+
+Sparsity refers to the practice of introducing zero values into the model's weight matrices, effectively reducing the number of non-zero parameters. This reduction leads to memory savings and faster computations.
+
+* **Structured Sparsity**: In structured sparsity, entire neurons or filters are pruned, resulting in a more straightforward model with fewer parameters. This approach is beneficial for hardware acceleration, as it allows for efficient utilization of sparse matrix multiplication operations.
+
+* **Unstructured Sparsity**: Unstructured sparsity involves pruning individual weights within a matrix, leading to a more irregular and sparse model. This method can be more challenging to implement but offers greater flexibility in terms of memory and computational savings.
+
+== Implementing Quantization Recipes
+
+To apply quantization techniques, you can use pre-built quantization recipes provided by tools like LLM Compressor. Some popular quantization recipes include:
+
+* **SmoothQuant**: This recipe uses a smoothing technique to minimize quantization errors during training, resulting in better model performance

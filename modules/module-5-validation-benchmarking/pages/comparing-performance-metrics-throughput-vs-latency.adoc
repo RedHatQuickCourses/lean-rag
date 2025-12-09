@@ -1,0 +1,37 @@
+#  Comparing performance metrics (throughput vs. latency
+
+```
+= Comparing Performance Metrics: Throughput vs. Latency
+
+== Introduction
+
+In the context of large language model (LLM) deployments, understanding and comparing performance metrics such as throughput and latency is crucial for optimizing inference services. This section will delve into these two key metrics, their definitions, and how to interpret and compare them effectively.
+
+== Throughput
+
+Throughput is a measure of how many requests or operations an LLM inference service can handle within a given timeframe, typically expressed in requests per second (RPS). High throughput indicates that the system can efficiently process a large number of requests, which is essential for serving numerous users or applications simultaneously.
+
+To maximize throughput, consider the following strategies:
+
+* **Batching**: Group multiple requests into a single batch to reduce the overhead associated with individual request processing.
+* **Continuous Batching**: Utilize the continuous batching feature in vLLM to maintain a steady stream of requests and improve GPU utilization.
+* **PagedAttention**: Implement PagedAttention to optimize memory usage and enable processing of larger contexts.
+
+== Latency
+
+Latency, on the other hand, refers to the time taken to process a single request or the delay between a client sending a request and receiving a response. Low latency is critical for providing a responsive user experience, especially in applications where real-time interactions are expected.
+
+To minimize latency, consider these techniques:
+
+* **Prefetching**: Utilize prefix caching in llm-d to reuse Key-Value (KV) cache for RAG system prompts, reducing the time spent on prefill phase.
+* **Disaggregation**: Separate the prefill and decode phases using llm-d to optimize resource allocation and minimize idle time.
+* **Model Optimization**: Employ model compression techniques like quantization and sparsity to reduce GPU memory footprint and accelerate inference.
+
+== Comparing Throughput and Latency
+
+While both throughput and latency are essential performance metrics, they represent different aspects of LLM inference service performance. Throughput focuses on the system's capacity to handle multiple requests, whereas latency emphasizes the responsiveness of individual requests.
+
+When comparing throughput and latency, consider the following:
+
+1. **Service Requirements**: Determine the desired throughput and acceptable latency based on the specific use case and user expectations.
+2. **Trade-offs**: Understand that optimizing for higher

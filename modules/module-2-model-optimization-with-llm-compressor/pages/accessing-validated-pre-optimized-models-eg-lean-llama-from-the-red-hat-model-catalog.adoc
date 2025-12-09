@@ -1,0 +1,39 @@
+#  Accessing validated, pre-optimized models (e.g., Lean Llama) from the Red Hat Model Catalog
+
+== Accessing Validated, Pre-optimized Models from the Red Hat Model Catalog
+
+In this section, we will explore how to access validated, pre-optimized models from the Red Hat Model Catalog, specifically focusing on the Lean Llama model. These pre-optimized models are crucial for reducing GPU memory footprint and accelerating inference times.
+
+### 1. Introduction to Red Hat Model Catalog
+
+The Red Hat Model Catalog is a centralized repository for pre-trained, optimized machine learning models. It simplifies the process of model deployment and management by providing a collection of models that have been thoroughly tested and optimized for performance.
+
+### 2. Accessing Lean Llama Model
+
+Lean Llama is a pre-optimized model available in the Red Hat Model Catalog, designed for efficient inference. To access this model, follow these steps:
+
+#### 2.1. Navigate to the Red Hat Model Catalog
+
+Visit the Red Hat Model Catalog at [https://model-catalog.rh-ai.com](https://model-catalog.rh-ai.com).
+
+#### 2.2. Search for Lean Llama
+
+Use the search bar or browse through the available models to find "Lean Llama". Click on the model to view its details.
+
+#### 2.3. Download the Model
+
+The Red Hat Model Catalog provides containerized models, making it easy to deploy them in various environments. Click on the "Download" button to get the Lean Llama model in a container format (e.g., Docker image).
+
+### 3. Using LLM Compressor with Lean Llama
+
+To further optimize the Lean Llama model for inference, you can use the LLM Compressor tool. This tool allows you to create optimized "ModelCars" (containerized models) with techniques like quantization and sparsity.
+
+#### 3.1. Quantization Recipes
+
+Quantization recipes, such as SmoothQuant and GPTQ, can be applied to reduce the GPU memory footprint. These recipes are available within the LLM Compressor tool.
+
+#### 3.2. Implementing Quantization
+
+Follow these steps to implement quantization using LLM Compressor:
+
+1. Install LLM Compressor: Follow the installation instructions provided in the [LLM Compressor documentation](https://llm-compressor.readthedocs.io/

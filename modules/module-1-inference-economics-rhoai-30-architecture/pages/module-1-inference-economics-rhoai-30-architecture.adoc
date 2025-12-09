@@ -1,0 +1,15 @@
+#  Module 1: Inference Economics & RHOAI 3.0 Architecture
+
+```
+= Module 1: Inference Economics & RHOAI 3.0 Architecture
+
+== Key Concepts
+
+- **Impossible Trinity Analysis**: Examination of the trade-offs between Accuracy, Latency, and Cost in Large Language Model (LLM) deployments.
+
+- **Critical GPU Underutilization**: Identification of inefficient GPU usage and the impact of memory management on inference costs.
+
+- **RHOAI 3.0 AI Factory**: Overview of Red Hat's industrialized model serving approach, focusing on the "AI Factory" for efficient model deployment and management.
+
+- **RHOAI 3.0 Inference Stack**: Mapping of the inference stack components, including vLLM, llm-d, and KServe integration, to understand the architecture for optimized model serving.
+```

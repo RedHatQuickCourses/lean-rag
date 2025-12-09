@@ -1,0 +1,28 @@
+#  Mapping the RHOAI 3.0 inference stack: vLLM, llm-d, and KServe integration
+
+```
+= Mapping the RHOAI 3.0 Inference Stack: vLLM, llm-d, and KServe Integration
+
+== Overview
+
+In this section, we will delve into the Red Hat AI (RHOAI) 3.0 inference stack, focusing on three key components: vLLM, llm-d, and KServe. Understanding their roles and integration is crucial for deploying and managing large language models (LLMs) at scale.
+
+== vLLM (Vector Longformer)
+
+vLLM is an optimized version of Longformer, designed for efficient vector storage and retrieval. It enables handling long sequences by employing a sliding window approach and sparse attention mechanisms. vLLM is crucial for managing the memory footprint of LLMs, especially when dealing with extensive context.
+
+== llm-d (Large Language Model Daemon)
+
+llm-d is a high-performance, distributed inference service for LLMs. It facilitates the deployment and management of LLMs across multiple GPUs and nodes, ensuring efficient resource utilization and minimizing latency. llm-d supports various inference techniques, such as PagedAttention and Continuous Batching, to maximize throughput.
+
+== KServe
+
+KServe is an open-source, Kubernetes-native model serving framework that simplifies the deployment and management of machine learning models. It provides a standardized API for serving models, enabling seamless integration with various model formats, including those used by vLLM and llm-d. KServe also supports model versioning, A/B testing, and canary deployments, ensuring a robust and flexible inference stack.
+
+== Integration of vLLM, llm-d, and KServe
+
+The RHOAI 3.0 inference stack integrates vLLM, llm-d, and KServe to create a powerful, scalable, and efficient solution for serving LLMs. Here's a high-level overview of their integration:
+
+1. **Model Preparation**: First, LLMs are prepared using vLLM for efficient vector storage and retrieval. This includes techniques like quantization and sparsity to reduce memory footprint.
+
+2. **Deployment with llm-d**: The optimized LLMs are then deployed using llm-d for distributed inference. llm-d manages the allocation of GPUs and nodes, ensuring optimal resource utilization and

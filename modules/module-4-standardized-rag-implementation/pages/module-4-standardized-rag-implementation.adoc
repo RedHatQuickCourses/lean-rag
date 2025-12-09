@@ -1,0 +1,15 @@
+#  Module 4: Standardized RAG Implementation
+
+```
+== Module 4: Standardized RAG Implementation
+
+This module focuses on implementing a standardized Retrieval-Augmented Generation (RAG) system.
+
+- **Data Ingestion**: Learn to ingest and chunk unstructured enterprise data, specifically PDFs, using Docling.
+
+- **Workflow Orchestration**: Understand how to orchestrate RAG workflows using the Llama Stack API. This includes standardizing "Response Generation" and "Vector IO" processes.
+
+- **Vector Database Integration**: Explore the integration of vector databases such as Milvus and Chroma via Llama Stack providers.
+
+- **Deployment with GitOps**: Discover how to deploy the RAG application stack using GitOps and ArgoCD, ensuring repeatability and consistency in deployments.
+```

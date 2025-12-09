@@ -1,0 +1,30 @@
+#  Defining Service Level Objectives (SLOs) for Time To First Token (TTFT) and Inter-Token Latency (ITL)
+
+```
+= Defining Service Level Objectives (SLOs) for Time To First Token (TTFT) and Inter-Token Latency (ITL)
+
+== Introduction
+
+In the context of large language models (LLMs), defining Service Level Objectives (SLOs) is crucial for ensuring the performance and reliability of your inference service. Two key metrics to consider when defining SLOs are Time To First Token (TTFT) and Inter-Token Latency (ITL). This document will guide you through the process of defining these SLOs, their significance, and how to measure them.
+
+== Time To First Token (TTFT)
+
+TTFT represents the time it takes for the model to generate the first token of a response after receiving a prompt. This metric is essential for applications where quick responses are critical, such as chatbots or real-time translation services.
+
+*Defining TTFT SLO:*
+
+1. Identify the maximum acceptable delay for the first token. This value depends on the specific use case and user expectations.
+2. Set a target for TTFT, typically expressed as a percentile (e.g., 95th or 99th percentile). For example, a target of 95th percentile TTFT ≤ 500ms indicates that 95% of requests should be served within 500 milliseconds.
+
+== Inter-Token Latency (ITL)
+
+ITL measures the average time it takes for the model to generate each subsequent token in a response. This metric is important for maintaining a smooth and responsive user experience, especially for longer text generation tasks.
+
+*Defining ITL SLO:*
+
+1. Determine the desired average latency for token generation. This value should consider the complexity of the model and the expected user interaction speed.
+2. Set a target for ITL, similar to TTFT, using percentiles (e.g., 95th or 99th percentile). For instance, a target of 95th percentile ITL ≤ 200ms suggests that 95% of tokens should be generated within 200 milliseconds.
+
+== Measuring TTFT and ITL
+
+To accurately measure TTFT and ITL, you can use load testing tools like GuideLLM. These tools simulate real-world traffic and provide insights into the performance

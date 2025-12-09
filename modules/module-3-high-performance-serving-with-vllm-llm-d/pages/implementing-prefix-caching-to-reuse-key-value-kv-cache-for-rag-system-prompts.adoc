@@ -1,0 +1,36 @@
+#  Implementing prefix caching to reuse Key-Value (KV) cache for RAG system prompts
+
+```
+= Implementing Prefix Caching to Reuse Key-Value (KV) Cache for RAG System Prompts
+
+== Objective
+
+In this section, we will explore how to implement prefix caching to reuse Key-Value (KV) cache for Retrieval-Augmented Generation (RAG) system prompts. This technique is crucial for optimizing performance and reducing latency in RAG systems.
+
+== Introduction
+
+Prefix caching is a method used to store and reuse previously computed results for similar inputs, thereby reducing redundant computations and improving overall system efficiency. In the context of RAG systems, prefix caching can be applied to the prompts used for retrieving relevant information from the knowledge base.
+
+== Key Concepts
+
+1. **RAG System Prompts**: Prompts are the input queries used to extract relevant information from the knowledge base in a RAG system.
+
+2. **Key-Value (KV) Cache**: A KV cache is a data structure that stores data as a collection of key-value pairs. In this context, the keys are the prefixes of the RAG system prompts, and the values are the corresponding retrieved information.
+
+3. **Prefix Caching**: This technique involves storing the results of computations for a given prefix of a prompt and reusing these results when the same prefix is encountered again.
+
+== Hands-On Activity: Implementing Prefix Caching
+
+In this activity, we will walk through the steps to implement prefix caching in a RAG system using llm-d and KServe.
+
+1. **Set up the Environment**: Ensure you have llm-d and KServe installed and configured.
+
+2. **Create a Prefix Cache**: Implement a KV cache to store prefixes and their corresponding retrieved information. You can use an in-memory data store like Redis for this purpose.
+
+3. **Modify the Prompt Processing**: Update the prompt processing pipeline to check the prefix cache before sending the prompt to the model. If a matching prefix is found, retrieve the stored result from the cache. If not, send the prompt to the model, store the result in the cache, and then return it.
+
+4. **Test the Implementation**: Simulate a series of prompts, some of which should match prefixes in the cache and others that should not. Measure the performance improvement in terms of reduced latency and increased throughput.
+
+== Expert Insights
+
+- **

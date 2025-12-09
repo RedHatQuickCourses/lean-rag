@@ -1,0 +1,52 @@
+#  Ingesting and chunking unstructured enterprise data (PDFs) using Docling
+
+```
+= Ingesting and Chunking Unstructured Enterprise Data (PDFs) using Docling
+
+== Module 4: Standardized RAG Implementation
+
+In this module, we will focus on ingesting and chunking unstructured enterprise data, specifically PDFs, using Docling. This process is crucial for preparing the data for the Retrieval-Augmented Generation (RAG) system.
+
+=== 4.1. Understanding Docling
+
+Docling is an open-source tool designed to extract text from various document formats, including PDFs, and convert them into a structured format suitable for machine learning tasks. It leverages advanced Optical Character Recognition (OCR) techniques to ensure high accuracy in text extraction.
+
+=== 4.2. Setting Up Docling
+
+To use Docling, you need to have Python and pip installed on your system. You can install Docling via pip:
+
+```
+pip install docling
+```
+
+Ensure you have the necessary OCR engines installed. For Tesseract, for instance, you can use:
+
+```
+sudo apt-get install tesseract-ocr
+```
+
+=== 4.3. Ingesting PDFs with Docling
+
+Docling provides a simple command-line interface to ingest PDFs. Here's a basic example:
+
+```
+docling ingest --input /path/to/your/document.pdf --output /path/to/output/directory
+```
+
+This command will extract text from the PDF and save it in the specified output directory.
+
+=== 4.4. Chunking the Ingested Data
+
+Once the data is ingested, it needs to be chunked for efficient processing by the RAG system. Docling allows you to split the ingested text into manageable chunks.
+
+```
+docling chunk --input /path/to/output/directory --output /path/to/chunked/directory --chunk-size 1000
+```
+
+This command will split the ingested text into chunks of 1000 tokens each and save them in the specified chunked directory.
+
+=== 4.5. Hands-On Activity: Ingesting and Chunking PDFs
+
+1. Install Docling and the necessary OCR engines.
+2. Prepare a sample PDF for ingestion.
+3. Run the ingest command to extract text from the PDF

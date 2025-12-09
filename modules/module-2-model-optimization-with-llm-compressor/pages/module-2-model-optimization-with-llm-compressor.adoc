@@ -1,0 +1,18 @@
+#  Module 2: Model Optimization with LLM Compressor
+
+```
+Module 2: Model Optimization with LLM Compressor
+==================================================
+
+This module focuses on optimizing models using the LLM Compressor. Key topics include:
+
+- Techniques for model compression:
+  - Quantization (FP8, INT8) to reduce model precision and size
+  - Sparsity to eliminate less important weights
+
+- Utilizing LLM Compressor to generate optimized "ModelCars" (containerized models) for efficient deployment.
+
+- Implementing quantization recipes such as SmoothQuant and GPTQ to minimize GPU memory usage.
+
+- Accessing pre-optimized, validated models from the Red Hat Model Catalog, like Lean Llama, to accelerate development.
+```

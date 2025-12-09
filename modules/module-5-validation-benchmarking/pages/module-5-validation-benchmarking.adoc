@@ -1,0 +1,12 @@
+#  Module 5: Validation & Benchmarking
+
+```
+= Module 5: Validation & Benchmarking
+
+== Objectives
+
+- Define Service Level Objectives (SLOs) for Time To First Token (TTFT) and Inter-Token Latency (ITL)
+- Validate throughput gains using GuideLLM to simulate real-world traffic load
+- Compare performance metrics, focusing on throughput versus latency trade-offs
+- Ensure the RAG system meets the established SLOs through rigorous testing and benchmarking
+```
