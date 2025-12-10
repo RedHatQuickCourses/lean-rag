@@ -211,10 +211,68 @@
 </div>
 <div class="paragraph">
 <p>Description:
-Course description FIXME</p>
+This course teaches you how to optimize RAG deployments using Red Hat OpenShift AI 3.0 capabilities to reduce GPU costs by 50%+ and improve throughput by 2x-4x. The course combines theoretical concepts with hands-on deployment of the Lean RAG Accelerator quickstart.</p>
 </div>
 <div class="paragraph">
 <p>Duration: FIXME hours</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_course_structure"><a class="anchor" href="#_course_structure"></a>Course Structure</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This course includes both <strong>training modules</strong> and a <strong>deployable quickstart</strong>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Training Modules</strong>: Learn the concepts, architecture, and best practices</p>
+</li>
+<li>
+<p><strong>QuickStart Code</strong>: Deployable code in <code>lean-rag-accelerator/</code> directory</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_quickstart_access"><a class="anchor" href="#_quickstart_access"></a>QuickStart Access</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The deployable Lean RAG Accelerator quickstart is available in the repository root:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>QuickStart README</strong>: <a href="../../lean-rag-accelerator/README.md">Lean RAG Accelerator QuickStart</a></p>
+</li>
+<li>
+<p><strong>Deployment Guide</strong>: <a href="../../lean-rag-accelerator/docs/deployment-guide.md">Deployment Guide</a></p>
+</li>
+<li>
+<p><strong>Business Value</strong>: <a href="../../lean-rag-accelerator/docs/business-value-driver.md">Business Value Driver</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To get started with the quickstart:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd lean-rag-accelerator
+./bootstrap.sh</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Or use the Makefile:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd lean-rag-accelerator
+make help
+make deploy-all NAMESPACE=lean-rag-accelerator</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -251,13 +309,37 @@ Course description FIXME</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Course or experience&#8230;&#8203;</p>
+<p>Red Hat OpenShift AI 3.0 installed and configured</p>
 </li>
 <li>
-<p>Course or experience&#8230;&#8203;</p>
+<p>Basic Kubernetes knowledge (kubectl, pods, services)</p>
 </li>
 <li>
-<p>Course or experience&#8230;&#8203;</p>
+<p>Understanding of RAG (Retrieval-Augmented Generation) concepts</p>
+</li>
+<li>
+<p>Access to a cluster with GPU nodes (NVIDIA A10G or equivalent)</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_course_resources"><a class="anchor" href="#_course_resources"></a>Course Resources</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Training Content</strong>: Navigate through the modules using the left sidebar</p>
+</li>
+<li>
+<p><strong>QuickStart Code</strong>: See <code>lean-rag-accelerator/</code> directory in the repository</p>
+</li>
+<li>
+<p><strong>Architecture Diagrams</strong>: <a href="../../lean-rag-accelerator/docs/architecture.md">Architecture Documentation</a></p>
+</li>
+<li>
+<p><strong>Benchmarking Guide</strong>: <a href="../../lean-rag-accelerator/docs/benchmarks.md">Performance Benchmarks</a></p>
 </li>
 </ul>
 </div>
