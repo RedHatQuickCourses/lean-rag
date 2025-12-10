@@ -6,12 +6,43 @@
 Course Title:  Lean RAG Accelerator QuickStart Training
 
 Description:
-Course description FIXME
+This course teaches you how to optimize RAG deployments using Red Hat OpenShift AI 3.0 capabilities to reduce GPU costs by 50%+ and improve throughput by 2x-4x. The course combines theoretical concepts with hands-on deployment of the Lean RAG Accelerator quickstart.
 
 Duration: FIXME hours
 
-== Topics covered in this course
+== Course Structure
 
+This course includes both *training modules* and a *deployable quickstart*:
+
+* **Training Modules**: Learn the concepts, architecture, and best practices
+* **QuickStart Code**: Deployable code in `lean-rag-accelerator/` directory
+
+== QuickStart Access
+
+The deployable Lean RAG Accelerator quickstart is available in the repository root:
+
+* **QuickStart README**: link:../../lean-rag-accelerator/README.md[Lean RAG Accelerator QuickStart]
+* **Deployment Guide**: link:../../lean-rag-accelerator/docs/deployment-guide.md[Deployment Guide]
+* **Business Value**: link:../../lean-rag-accelerator/docs/business-value-driver.md[Business Value Driver]
+
+To get started with the quickstart:
+
+[source,bash]
+----
+cd lean-rag-accelerator
+./bootstrap.sh
+----
+
+Or use the Makefile:
+
+[source,bash]
+----
+cd lean-rag-accelerator
+make help
+make deploy-all NAMESPACE=lean-rag-accelerator
+----
+
+== Topics covered in this course
 
 *  Module 1: Inference Economics & RHOAI 3.0 Architecture
 
@@ -23,12 +54,18 @@ Duration: FIXME hours
 
 *  Module 5: Validation & Benchmarking
 
-
-
 == Prerequisites
 
 This course assumes that you have the following prior experience:
 
-* Course or experience...
-* Course or experience...
-* Course or experience...
+* Red Hat OpenShift AI 3.0 installed and configured
+* Basic Kubernetes knowledge (kubectl, pods, services)
+* Understanding of RAG (Retrieval-Augmented Generation) concepts
+* Access to a cluster with GPU nodes (NVIDIA A10G or equivalent)
+
+== Course Resources
+
+* **Training Content**: Navigate through the modules using the left sidebar
+* **QuickStart Code**: See `lean-rag-accelerator/` directory in the repository
+* **Architecture Diagrams**: link:../../lean-rag-accelerator/docs/architecture.md[Architecture Documentation]
+* **Benchmarking Guide**: link:../../lean-rag-accelerator/docs/benchmarks.md[Performance Benchmarks]
