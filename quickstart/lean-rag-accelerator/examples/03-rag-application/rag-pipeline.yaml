@@ -1,0 +1,102 @@
+# Llama Stack RAG Pipeline Configuration
+# This defines the RAG workflow for document retrieval and response generation
+
+apiVersion: llama.redhat.com/v1alpha1
+kind: RAGPipeline
+metadata:
+  name: lean-rag-pipeline
+  namespace: default  # Update with your namespace
+  labels:
+    app: lean-rag-accelerator
+    component: rag
+spec:
+  # Document Ingestion Configuration
+  ingestion:
+    provider: docling
+    config:
+      chunkSize: 512  # Tokens per chunk
+      chunkOverlap: 50  # Overlap between chunks
+      supportedFormats:
+        - pdf
+        - docx
+        - txt
+        - md
+      processing:
+        ocr: true  # Enable OCR for scanned documents
+        tableExtraction: true
+        metadataExtraction: true
+  
+  # Vector Store Configuration
+  vectorStore:
+    provider: milvus  # Options: milvus, chroma
+    config:
+      collectionName: lean-rag-documents
+      embeddingModel: <embedding-model-reference>  # Update with embedding model
+      embeddingDimension: 768  # Adjust based on embedding model
+      indexType: HNSW  # Options: HNSW, IVF_FLAT
+      metricType: L2  # Options: L2, IP (Inner Product)
+      connection:
+        host: <milvus-host>  # Update with Milvus service host
+        port: 19530
+        # Alternative for Chroma:
+        # provider: chroma
+        # config:
+        #   collectionName: lean-rag-documents
+        #   host: <chroma-host>
+        #   port: 8000
+  
+  # Response Generation Configuration
+  responseGeneration:
+    modelEndpoint: <inference-service-endpoint>  # Update with vLLM service endpoint
+    config:
+      temperature: 0.7
+      maxTokens: 512
+      topP: 0.9
+      topK: 40
+      stopSequences: []
+    
+    # Retrieval Configuration
+    retrieval:
+      strategy: semantic_search  # Options: semantic_search, hybrid, keyword
+      topK: 5  # Number of documents to retrieve
+      rerank: false  # Enable reranking (optional)
+      scoreThreshold: 0.7  # Minimum similarity score
+  
+  # API Configuration
+  api:
+    port: 8080
+    endpoints:
+      - /query  # Query endpoint
+      - /ingest  # Document ingestion endpoint
+      - /health  # Health check endpoint
+    authentication:
+      enabled: false  # Enable for production
+      type: oauth2  # Options: oauth2, api_key
+  
+  # Resources
+  resources:
+    requests:
+      memory: "4Gi"
+      cpu: "2"
+    limits:
+      memory: "8Gi"
+      cpu: "4"
+
+---
+# Service for the RAG Pipeline
+apiVersion: v1
+kind: Service
+metadata:
+  name: lean-rag-pipeline-service
+  namespace: default  # Update with your namespace
+spec:
+  selector:
+    app: lean-rag-accelerator
+    component: rag
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP
+

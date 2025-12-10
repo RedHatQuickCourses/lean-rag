@@ -1,0 +1,69 @@
+# KServe InferenceService for Lean RAG Accelerator
+# This defines the inference service that uses the vLLM runtime
+
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: lean-rag-inference
+  namespace: default  # Update with your namespace
+  labels:
+    app: lean-rag-accelerator
+    component: inference
+  annotations:
+    serving.kserve.io/deploymentMode: "Serverless"
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: llama
+        version: "1"
+      
+      # Storage URI for the optimized model
+      # Update with your actual model storage location
+      storageUri: "pvc://<model-storage-pvc>/models/llama-3.1-8b-quantized"
+      # Alternative S3 storage:
+      # storageUri: "s3://<bucket-name>/models/llama-3.1-8b-quantized"
+    
+    # Use the vLLM runtime
+    runtime: vllm-runtime
+    
+    # Resource requirements
+    resources:
+      requests:
+        memory: "16Gi"
+        cpu: "4"
+        nvidia.com/gpu: 1
+      limits:
+        memory: "32Gi"
+        cpu: "8"
+        nvidia.com/gpu: 1
+    
+    # Scaling configuration
+    minReplicas: 1
+    maxReplicas: 10
+    scaleTarget: 80  # Scale when CPU usage exceeds 80%
+    scaleMetric: cpu
+    
+    # Timeout settings
+    timeoutSeconds: 300  # 5 minutes for long-running requests
+    
+    # Container configuration
+    containerConcurrency: 10  # Max concurrent requests per pod
+
+---
+# Optional: Route for external access
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: lean-rag-inference-route
+  namespace: default  # Update with your namespace
+spec:
+  to:
+    kind: Service
+    name: lean-rag-inference-predictor-default
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+

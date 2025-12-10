@@ -1,0 +1,38 @@
+# Model Configuration for Llama 3.1 8B
+# This file contains model-specific settings and metadata
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: llama-3.1-8b-config
+  namespace: default  # Update with your namespace
+data:
+  model_name: "meta-llama/Llama-3.1-8B"
+  model_size: "8B"
+  model_family: "llama"
+  model_version: "3.1"
+  
+  # Model characteristics
+  context_length: "8192"
+  vocab_size: "128256"
+  
+  # Quantization info
+  quantization_method: "smoothquant"
+  quantization_precision: "int8"
+  quantized_model_path: "models/llama-3.1-8b-quantized"
+  
+  # Performance expectations
+  expected_throughput: "2-4x improvement"
+  expected_memory_reduction: "~50%"
+  expected_accuracy_retention: ">95%"
+  
+  # Usage notes
+  notes: |
+    This model has been optimized using SmoothQuant INT8 quantization.
+    Expected performance improvements:
+    - 2x to 4x throughput increase
+    - ~50% memory reduction
+    - <5% accuracy degradation
+    
+    For GPTQ INT4 version, see alternative quantization-recipe.yaml configuration.
+

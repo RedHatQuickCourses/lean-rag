@@ -1,0 +1,24 @@
+# Architecture Diagram Placeholder
+
+This file should contain a visual architecture diagram showing:
+- vLLM inference serving
+- llm-d distributed inference
+- Llama Stack RAG pipeline
+- Vector store integration
+- Document ingestion flow
+
+**TODO**: Add actual architecture diagram image file (PNG/SVG format)
+
+Recommended tools:
+- Draw.io / diagrams.net
+- Lucidchart
+- Mermaid diagrams
+- PlantUML
+
+The diagram should illustrate:
+1. Model optimization pipeline (LLM Compressor)
+2. Inference serving layer (vLLM + llm-d)
+3. RAG application layer (Llama Stack + Docling)
+4. Vector store integration
+5. Data flow and API endpoints
+

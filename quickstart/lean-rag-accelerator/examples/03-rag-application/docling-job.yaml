@@ -1,0 +1,163 @@
+# Docling Job for Document Ingestion
+# This job ingests and chunks documents for the RAG pipeline
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: docling-ingestion-job
+  namespace: default  # Update with your namespace
+  labels:
+    app: lean-rag-accelerator
+    component: docling
+spec:
+  # Retry policy
+  backoffLimit: 3
+  completions: 1
+  parallelism: 1
+  
+  template:
+    metadata:
+      labels:
+        app: lean-rag-accelerator
+        component: docling
+    spec:
+      restartPolicy: Never
+      
+      containers:
+      - name: docling
+        image: <docling-image>  # Update with Docling image
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            # Docling ingestion script
+            echo "Starting document ingestion..."
+            
+            # Configuration
+            INPUT_DIR=/mnt/documents/input
+            OUTPUT_DIR=/mnt/documents/output
+            CHUNK_SIZE=512
+            CHUNK_OVERLAP=50
+            
+            # Process documents
+            python -m docling.ingest \
+              --input-dir "$INPUT_DIR" \
+              --output-dir "$OUTPUT_DIR" \
+              --chunk-size "$CHUNK_SIZE" \
+              --chunk-overlap "$CHUNK_OVERLAP" \
+              --format json \
+              --ocr-enabled \
+              --table-extraction \
+              --metadata-extraction
+            
+            echo "Document ingestion complete!"
+            echo "Processed documents saved to: $OUTPUT_DIR"
+        
+        env:
+        - name: DOCLING_CONFIG_PATH
+          value: /etc/docling/config.yaml
+        - name: VECTOR_STORE_ENDPOINT
+          value: <vector-store-endpoint>  # Update with vector store service endpoint
+        - name: EMBEDDING_MODEL
+          value: <embedding-model>  # Update with embedding model name
+        
+        volumeMounts:
+        - name: docling-config
+          mountPath: /etc/docling
+        - name: input-documents
+          mountPath: /mnt/documents/input
+          readOnly: true
+        - name: output-documents
+          mountPath: /mnt/documents/output
+        
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+      
+      volumes:
+      - name: docling-config
+        configMap:
+          name: docling-config
+      - name: input-documents
+        persistentVolumeClaim:
+          claimName: <input-documents-pvc>  # Update with input documents PVC
+      - name: output-documents
+        persistentVolumeClaim:
+          claimName: <output-documents-pvc>  # Update with output documents PVC
+
+---
+# CronJob for scheduled document ingestion (optional)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: docling-ingestion-cron
+  namespace: default  # Update with your namespace
+  labels:
+    app: lean-rag-accelerator
+    component: docling
+spec:
+  # Schedule: Run daily at 2 AM
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            app: lean-rag-accelerator
+            component: docling
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: docling
+            image: <docling-image>  # Update with Docling image
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                # Scheduled document ingestion
+                echo "Running scheduled document ingestion..."
+                python -m docling.ingest \
+                  --input-dir /mnt/documents/input \
+                  --output-dir /mnt/documents/output \
+                  --chunk-size 512 \
+                  --chunk-overlap 50 \
+                  --format json \
+                  --ocr-enabled \
+                  --table-extraction
+            env:
+            - name: DOCLING_CONFIG_PATH
+              value: /etc/docling/config.yaml
+            - name: VECTOR_STORE_ENDPOINT
+              value: <vector-store-endpoint>
+            volumeMounts:
+            - name: docling-config
+              mountPath: /etc/docling
+            - name: input-documents
+              mountPath: /mnt/documents/input
+              readOnly: true
+            - name: output-documents
+              mountPath: /mnt/documents/output
+            resources:
+              requests:
+                memory: "4Gi"
+                cpu: "2"
+              limits:
+                memory: "8Gi"
+                cpu: "4"
+          volumes:
+          - name: docling-config
+            configMap:
+              name: docling-config
+          - name: input-documents
+            persistentVolumeClaim:
+              claimName: <input-documents-pvc>
+          - name: output-documents
+            persistentVolumeClaim:
+              claimName: <output-documents-pvc>
+

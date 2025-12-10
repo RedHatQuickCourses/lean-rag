@@ -1,0 +1,84 @@
+# LLM Compressor Quantization Recipe for Llama 3.1 8B
+# This configuration optimizes the model using SmoothQuant or GPTQ quantization
+
+apiVersion: ai.redhat.com/v1alpha1
+kind: QuantizationRecipe
+metadata:
+  name: llama-3.1-8b-quantization
+  namespace: default  # Update with your namespace
+spec:
+  model:
+    name: meta-llama/Llama-3.1-8B
+    baseModel: llama-3.1-8b
+    source:
+      # Update with your model source (HuggingFace, S3, PVC, etc.)
+      uri: <model-source-uri>
+      format: safetensors  # or pytorch, onnx
+  
+  quantization:
+    method: smoothquant  # Options: smoothquant, gptq
+    targetPrecision: int8  # Options: int8 (smoothquant), int4 (gptq)
+    
+    # SmoothQuant specific parameters
+    smoothquant:
+      alpha: 0.5  # Smoothing factor (0.0 to 1.0)
+      calibration:
+        dataset: <calibration-dataset-uri>  # Update with dataset location
+        numSamples: 512  # Number of calibration samples
+        batchSize: 8
+    
+    # GPTQ specific parameters (if using GPTQ)
+    # gptq:
+    #   bits: 4
+    #   groupSize: 128
+    #   calibration:
+    #     dataset: <calibration-dataset-uri>
+    #     numSamples: 128
+    #     batchSize: 1
+  
+  output:
+    format: onnx  # Options: onnx, safetensors, pytorch
+    storage:
+      type: pvc  # Options: pvc, s3
+      # For PVC:
+      pvc:
+        name: <model-storage-pvc>  # Update with your PVC name
+        path: models/llama-3.1-8b-quantized
+      # For S3:
+      # s3:
+      #   bucket: <bucket-name>
+      #   prefix: models/llama-3.1-8b-quantized
+      #   endpoint: <s3-endpoint>
+      #   credentials: <secret-name>
+  
+  resources:
+    requests:
+      memory: "16Gi"
+      cpu: "4"
+      nvidia.com/gpu: 1
+    limits:
+      memory: "32Gi"
+      cpu: "8"
+      nvidia.com/gpu: 1
+
+---
+# Optional: Job to monitor quantization progress
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: quantization-monitor
+  namespace: default  # Update with your namespace
+spec:
+  template:
+    spec:
+      containers:
+      - name: monitor
+        image: <monitoring-image>  # Update with appropriate image
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            # Monitor quantization job status
+            # This is a placeholder - implement actual monitoring logic
+            echo "Monitoring quantization job..."
+      restartPolicy: Never
+

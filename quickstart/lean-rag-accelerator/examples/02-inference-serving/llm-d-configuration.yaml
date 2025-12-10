@@ -1,0 +1,153 @@
+# llm-d Configuration for Distributed Inference
+# This enables multi-node scaling for high-throughput inference
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: llm-d-config
+  namespace: default  # Update with your namespace
+  labels:
+    app: lean-rag-accelerator
+    component: llm-d
+data:
+  config.yaml: |
+    # llm-d Distributed Inference Configuration
+    # Enables scaling across multiple nodes for higher throughput
+    
+    # Cluster configuration
+    cluster:
+      # Number of nodes in the cluster
+      numNodes: 2  # Adjust based on your cluster size
+      
+      # Node selection
+      nodeSelector:
+        nvidia.com/gpu.present: "true"
+      
+      # Resource allocation per node
+      resources:
+        gpu: 1
+        memory: "16Gi"
+        cpu: "4"
+    
+    # Model configuration
+    model:
+      # Model path (should match the optimized model from step 1)
+      path: "/mnt/models/llama-3.1-8b-quantized"
+      
+      # Model parallelism
+      tensorParallelSize: 1  # Per node
+      pipelineParallelSize: 1  # Across nodes
+      
+      # Context length
+      maxSequenceLength: 8192
+    
+    # Inference configuration
+    inference:
+      # Batch size per node
+      batchSize: 32
+      
+      # Maximum concurrent requests
+      maxConcurrentRequests: 100
+      
+      # Request timeout
+      timeoutSeconds: 300
+      
+      # Memory optimization
+      gpuMemoryUtilization: 0.9
+      kvCacheDtype: "fp8"
+    
+    # Load balancing
+    loadBalancer:
+      # Strategy: round-robin, least-connections, weighted
+      strategy: "round-robin"
+      
+      # Health check interval
+      healthCheckInterval: 30s
+    
+    # Monitoring
+    monitoring:
+      enabled: true
+      metricsPort: 9090
+      # Metrics to collect
+      metrics:
+        - throughput
+        - latency
+        - gpu_utilization
+        - memory_usage
+
+---
+# Deployment for llm-d coordinator
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-d-coordinator
+  namespace: default  # Update with your namespace
+  labels:
+    app: lean-rag-accelerator
+    component: llm-d-coordinator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lean-rag-accelerator
+      component: llm-d-coordinator
+  template:
+    metadata:
+      labels:
+        app: lean-rag-accelerator
+        component: llm-d-coordinator
+    spec:
+      containers:
+      - name: llm-d-coordinator
+        image: <llm-d-image>  # Update with llm-d coordinator image
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: CONFIG_PATH
+          value: /etc/llm-d/config.yaml
+        volumeMounts:
+        - name: config
+          mountPath: /etc/llm-d
+        - name: model-storage
+          mountPath: /mnt/models
+          readOnly: true
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+      volumes:
+      - name: config
+        configMap:
+          name: llm-d-config
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: <model-storage-pvc>  # Update with your PVC name
+
+---
+# Service for llm-d coordinator
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-d-coordinator
+  namespace: default  # Update with your namespace
+spec:
+  selector:
+    app: lean-rag-accelerator
+    component: llm-d-coordinator
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+  type: ClusterIP
+

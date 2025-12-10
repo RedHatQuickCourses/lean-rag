@@ -1,0 +1,138 @@
+# Vector Store Configuration
+# Supports both Milvus and Chroma backends
+
+# Milvus Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: milvus-config
+  namespace: default  # Update with your namespace
+data:
+  config.yaml: |
+    # Milvus Configuration
+    vectorStore:
+      provider: milvus
+      connection:
+        host: milvus-service  # Update with your Milvus service name
+        port: 19530
+        database: default
+        collection: lean-rag-documents
+      
+      # Collection settings
+      collection:
+        name: lean-rag-documents
+        description: "Lean RAG Accelerator document collection"
+        dimension: 768  # Adjust based on embedding model
+        metricType: L2  # Options: L2, IP
+        indexType: HNSW  # Options: HNSW, IVF_FLAT, IVF_SQ8
+        indexParams:
+          M: 16  # HNSW parameter
+          efConstruction: 200  # HNSW parameter
+      
+      # Embedding configuration
+      embedding:
+        model: <embedding-model>  # Update with embedding model name
+        dimension: 768
+        batchSize: 32
+      
+      # Search configuration
+      search:
+        topK: 5
+        metricType: L2
+        params:
+          ef: 100  # HNSW search parameter
+
+---
+# Alternative: Chroma Configuration
+# Uncomment and customize if using Chroma instead of Milvus
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: chroma-config
+#   namespace: default
+# data:
+#   config.yaml: |
+#     vectorStore:
+#       provider: chroma
+#       connection:
+#         host: chroma-service
+#         port: 8000
+#         collection: lean-rag-documents
+#       embedding:
+#         model: <embedding-model>
+#         dimension: 768
+#       search:
+#         topK: 5
+
+---
+# Milvus Deployment (if deploying Milvus in-cluster)
+# Note: This is a basic deployment - adjust based on your needs
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: milvus
+  namespace: default  # Update with your namespace
+spec:
+  serviceName: milvus
+  replicas: 1
+  selector:
+    matchLabels:
+      app: milvus
+  template:
+    metadata:
+      labels:
+        app: milvus
+    spec:
+      containers:
+      - name: milvus
+        image: milvusdb/milvus:v2.3.0  # Update with desired version
+        ports:
+        - containerPort: 19530
+          name: grpc
+        - containerPort: 9091
+          name: http
+        env:
+        - name: ETCD_ENDPOINTS
+          value: "etcd:2379"
+        - name: MINIO_ADDRESS
+          value: "minio:9000"
+        volumeMounts:
+        - name: milvus-data
+          mountPath: /var/lib/milvus
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+  volumeClaimTemplates:
+  - metadata:
+      name: milvus-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 100Gi
+
+---
+# Milvus Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: milvus-service
+  namespace: default  # Update with your namespace
+spec:
+  selector:
+    app: milvus
+  ports:
+    - name: grpc
+      port: 19530
+      targetPort: 19530
+      protocol: TCP
+    - name: http
+      port: 9091
+      targetPort: 9091
+      protocol: TCP
+  type: ClusterIP
+

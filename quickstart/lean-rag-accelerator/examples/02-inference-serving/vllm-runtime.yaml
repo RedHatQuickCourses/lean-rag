@@ -1,0 +1,99 @@
+# KServe ServingRuntime for vLLM
+# This defines the runtime environment for serving models with vLLM
+
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: vllm-runtime
+  namespace: default  # Update with your namespace
+  labels:
+    app: lean-rag-accelerator
+spec:
+  supportedModelFormats:
+    - name: llama
+      version: "1"
+      autoSelect: true
+    - name: onnx
+      version: "1"
+      autoSelect: false
+  
+  multiModel: false
+  grpcDataEndpoint: port:8001
+  
+  containers:
+    - name: vllm
+      image: <vllm-image>  # Update with vLLM image, e.g., vllm/vllm-openai:latest
+      imagePullPolicy: IfNotPresent
+      
+      # vLLM optimization arguments
+      args:
+        - --model
+        - /mnt/models  # Model mount point
+        - --host
+        - "0.0.0.0"
+        - --port
+        - "8000"
+        - --gpu-memory-utilization
+        - "0.9"  # Use 90% of GPU memory
+        - --kv-cache-dtype
+        - "fp8"  # Use FP8 for KV cache (memory efficient)
+        - --tensor-parallel-size
+        - "1"  # Adjust based on GPU count
+        - --max-model-len
+        - "8192"  # Context length for Llama 3.1 8B
+        - --trust-remote-code
+        - --disable-log-requests  # Optional: disable request logging for performance
+      
+      env:
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+        - name: VLLM_USE_MODELSCOPE
+          value: "False"
+      
+      ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        - containerPort: 8001
+          name: grpc
+          protocol: TCP
+      
+      resources:
+        requests:
+          memory: "16Gi"
+          cpu: "4"
+          nvidia.com/gpu: 1
+        limits:
+          memory: "32Gi"
+          cpu: "8"
+          nvidia.com/gpu: 1
+      
+      volumeMounts:
+        - name: model-storage
+          mountPath: /mnt/models
+          readOnly: true
+  
+  volumes:
+    - name: model-storage
+      persistentVolumeClaim:
+        claimName: <model-storage-pvc>  # Update with your PVC name
+        # Or use emptyDir for testing:
+        # emptyDir: {}
+
+---
+# Optional: ServiceMonitor for Prometheus metrics
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vllm-runtime-metrics
+  namespace: default  # Update with your namespace
+spec:
+  selector:
+    matchLabels:
+      app: lean-rag-accelerator
+      component: vllm-runtime
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+

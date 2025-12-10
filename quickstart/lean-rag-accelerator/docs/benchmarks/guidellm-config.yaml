@@ -1,0 +1,150 @@
+# GuideLLM Benchmarking Configuration
+# This configuration validates performance improvements through load testing
+
+apiVersion: benchmark.redhat.com/v1alpha1
+kind: GuideLLMConfig
+metadata:
+  name: lean-rag-benchmark
+  namespace: default  # Update with your namespace
+  labels:
+    app: lean-rag-accelerator
+    component: benchmark
+spec:
+  # Target endpoint for benchmarking
+  targetEndpoint: <inference-service-endpoint>  # Update with your inference service URL
+  # Example: http://lean-rag-inference.default.svc.cluster.local/v1/completions
+  
+  # Authentication (if required)
+  authentication:
+    enabled: false  # Enable if authentication is required
+    type: bearer  # Options: bearer, api_key, oauth2
+    # token: <token>  # Add token if authentication enabled
+  
+  # Test Scenarios
+  scenarios:
+    # Baseline scenario (before optimization)
+    - name: baseline
+      description: "Baseline performance before optimization"
+      concurrentUsers: 10
+      requestsPerSecond: 5
+      duration: 300s  # 5 minutes
+      rampUpTime: 60s  # Gradual ramp-up
+      requestTemplate:
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body:
+          prompt: "Explain the concept of retrieval-augmented generation."
+          max_tokens: 100
+          temperature: 0.7
+          top_p: 0.9
+    
+    # Optimized scenario (after optimization)
+    - name: optimized
+      description: "Performance after optimization"
+      concurrentUsers: 20  # 2x users
+      requestsPerSecond: 10  # 2x requests
+      duration: 300s
+      rampUpTime: 60s
+      requestTemplate:
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body:
+          prompt: "Explain the concept of retrieval-augmented generation."
+          max_tokens: 100
+          temperature: 0.7
+          top_p: 0.9
+    
+    # Stress test scenario
+    - name: stress-test
+      description: "Maximum load test"
+      concurrentUsers: 50
+      requestsPerSecond: 25
+      duration: 600s  # 10 minutes
+      rampUpTime: 120s
+      requestTemplate:
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body:
+          prompt: "Explain the concept of retrieval-augmented generation."
+          max_tokens: 100
+          temperature: 0.7
+  
+  # Metrics to Collect
+  metrics:
+    - throughput  # Requests per second
+    - latency  # Total request latency
+    - timeToFirstToken  # TTFT
+    - interTokenLatency  # ITL
+    - gpuUtilization  # GPU usage percentage
+    - errorRate  # Failed requests percentage
+    - p50Latency  # 50th percentile latency
+    - p95Latency  # 95th percentile latency
+    - p99Latency  # 99th percentile latency
+  
+  # Output Configuration
+  output:
+    format: json  # Options: json, csv, prometheus
+    destination:
+      type: pvc  # Options: pvc, s3, stdout
+      # For PVC:
+      pvc:
+        name: <benchmark-results-pvc>  # Update with your PVC name
+        path: benchmarks/results
+      # For S3:
+      # s3:
+      #   bucket: <bucket-name>
+      #   prefix: benchmarks/results
+      #   endpoint: <s3-endpoint>
+  
+  # Resource Requirements
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "2"
+    limits:
+      memory: "4Gi"
+      cpu: "4"
+
+---
+# Job to run the benchmark
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: guidellm-benchmark
+  namespace: default  # Update with your namespace
+spec:
+  template:
+    spec:
+      containers:
+      - name: guidellm
+        image: <guidellm-image>  # Update with GuideLLM image
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            # Run GuideLLM benchmark
+            guidellm run --config /etc/guidellm/config.yaml
+        volumeMounts:
+        - name: config
+          mountPath: /etc/guidellm
+        - name: results
+          mountPath: /results
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "2"
+          limits:
+            memory: "4Gi"
+            cpu: "4"
+      volumes:
+      - name: config
+        configMap:
+          name: guidellm-config
+      - name: results
+        persistentVolumeClaim:
+          claimName: <benchmark-results-pvc>  # Update with your PVC name
+      restartPolicy: Never
+  backoffLimit: 3
+
