@@ -1,15 +1,119 @@
-#  Module 4: Standardized RAG Implementation
+= Module 4: Standardized RAG Implementation
 
-```
-== Module 4: Standardized RAG Implementation
+== Introduction
 
-This module focuses on implementing a standardized Retrieval-Augmented Generation (RAG) system.
+This module focuses on implementing a standardized Retrieval-Augmented Generation (RAG) system using Red Hat OpenShift AI 3.0's **Llama Stack Operator**. The Llama Stack integrates LLM inference, semantic retrieval, and vector database storage into a single, streamlined stack.
 
-- **Data Ingestion**: Learn to ingest and chunk unstructured enterprise data, specifically PDFs, using Docling.
+**Key Learning Objectives:**
+- Deploy RAG using Llama Stack Operator and LLMInferenceService
+- Use embedded vector stores (Inline FAISS, Inline Milvus Lite) for "Lean RAG"
+- Process documents with Docling
+- Evaluate RAG quality with RAGAS
+- Deploy models using ModelCars (OCI containers)
 
-- **Workflow Orchestration**: Understand how to orchestrate RAG workflows using the Llama Stack API. This includes standardizing "Response Generation" and "Vector IO" processes.
+== Module Overview
 
-- **Vector Database Integration**: Explore the integration of vector databases such as Milvus and Chroma via Llama Stack providers.
+=== What is Llama Stack?
 
-- **Deployment with GitOps**: Discover how to deploy the RAG application stack using GitOps and ArgoCD, ensuring repeatability and consistency in deployments.
-```
+The **Llama Stack Operator** is RHOAI 3.0's integrated solution for RAG deployments. It provides:
+- **Unified API**: Single interface for LLM inference, vector operations, and RAG workflows
+- **Embedded Vector Stores**: Lightweight, embedded options for rapid development
+- **Standardized Components**: Consistent deployment model across environments
+- **Production Ready**: Scales from development to production
+
+=== "Lean RAG" Architecture
+
+For the Lean RAG Accelerator, we emphasize a "Lean RAG" approach:
+- **Embedded Vector Stores**: No external database dependencies
+- **Minimal Infrastructure**: Single-node or lightweight deployments
+- **Rapid Iteration**: Fast setup for development and testing
+- **Cost Effective**: Reduced operational overhead
+
+**Analogy**: Think of it as a high-performance espresso machine (vLLM/llm-d) paired with a simple, high-speed local coffee grinder (Inline FAISS/Milvus Lite) that processes fresh, domain-specific coffee beans (Docling-processed data), all operating efficiently inside your kitchen (OpenShift AI).
+
+== Topics Covered
+
+=== Section 4.1: Document Ingestion with Docling
+
+Learn to ingest and chunk unstructured enterprise data (PDFs, images, audio) using the **Docling** Python library. Docling transforms raw unstructured data into structured, machine-readable formats that RAG pipelines can consume.
+
+**Key Topics:**
+- Docling capabilities and use cases
+- Document processing workflow
+- Chunking strategies
+- Integration with Llama Stack
+
+=== Section 4.2: Orchestrating RAG Workflows with Llama Stack
+
+Understand how to orchestrate RAG workflows using the **Llama Stack API**. This includes standardizing "Response Generation" and "Vector IO" processes through the LLMInferenceService Custom Resource.
+
+**Key Topics:**
+- LLMInferenceService CR configuration
+- RAG workflow orchestration
+- Response generation standardization
+- Vector IO operations
+
+=== Section 4.3: Embedded Vector Store Integration
+
+Explore embedded vector database options for "Lean RAG" deployments:
+- **Inline FAISS**: Lightweight, embedded SQLite backend (Technology Preview)
+- **Inline Milvus Lite**: Embedded Milvus with local SQLite storage
+
+**Key Topics:**
+- When to use embedded vs. external vector stores
+- Inline FAISS configuration
+- Inline Milvus Lite configuration
+- Performance considerations
+
+=== Section 4.4: RAG Evaluation with RAGAS
+
+Measure RAG system quality using the **Ragas** evaluation provider (Technology Preview). Focus on objective metrics and the Inline Provider mode for development.
+
+**Key Topics:**
+- RAGAS evaluation metrics (Faithfulness, Answer Relevancy, Context Precision)
+- Inline Provider mode configuration
+- Early quality measurement
+- Integration with development workflow
+
+=== Section 4.5: Deployment with GitOps
+
+Discover how to deploy the RAG application stack using GitOps and ArgoCD, ensuring repeatability and consistency in deployments.
+
+**Key Topics:**
+- ModelCars (OCI container) deployment
+- LLMInferenceService deployment
+- ArgoCD Application configuration
+- GitOps workflow
+
+== Prerequisites
+
+Before starting this module, ensure you have:
+- Completed Modules 1-3 (understanding inference economics, model optimization, serving)
+- Red Hat OpenShift AI 3.0 installed and configured
+- Llama Stack Operator installed
+- Access to a cluster with GPU nodes
+- Basic understanding of Kubernetes Custom Resources
+
+== Module Structure
+
+This module follows a practical, hands-on approach:
+
+1. **Concept Introduction**: Understand the component and its role
+2. **Configuration**: Learn how to configure the component
+3. **Deployment**: Deploy and verify the component
+4. **Integration**: Integrate with other components
+5. **Best Practices**: Learn optimization and troubleshooting
+
+== Expected Outcomes
+
+By the end of this module, you will be able to:
+- Deploy a complete RAG system using Llama Stack Operator
+- Configure embedded vector stores for "Lean RAG" deployments
+- Process enterprise documents with Docling
+- Evaluate RAG quality with RAGAS
+- Deploy models using ModelCars
+- Integrate all components into a working RAG pipeline
+
+== Next Steps
+
+Proceed to Section 4.1 to learn about document ingestion with Docling.

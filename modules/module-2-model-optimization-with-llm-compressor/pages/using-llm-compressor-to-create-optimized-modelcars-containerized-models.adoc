@@ -1,49 +1,419 @@
-#  Using LLM Compressor to create optimized "ModelCars" (containerized models)
+= Using LLM Compressor to Create Optimized Models
 
-```
-= Using LLM Compressor to Create Optimized "ModelCars" (Containerized Models)
+== Introduction
 
-== Objective: Model Optimization with LLM Compressor
+RHOAI 3.0's LLM Compressor is the tool for creating optimized, quantized models for production deployment. This section covers how to use LLM Compressor to create optimized models (sometimes called "ModelCars" - containerized, optimized models).
 
-In this module, we will focus on optimizing large language models (LLMs) using the LLM Compressor tool to create efficient, containerized models known as "ModelCars." These optimized models will help reduce GPU memory footprint and improve inference performance.
+== What is LLM Compressor?
 
-=== 1. Techniques for Model Compression
+LLM Compressor is RHOAI 3.0's model optimization tool that:
+- Applies quantization (SmoothQuant, GPTQ)
+- Creates optimized model artifacts
+- Integrates with RHOAI 3.0 Model Registry
+- Produces production-ready models
 
-To begin with, we will explore various model compression techniques, including:
+**Key Features:**
+- Kubernetes-native (QuantizationRecipe CRD)
+- Supports multiple quantization methods
+- Integrates with RHOAI 3.0 infrastructure
+- Automated optimization workflows
 
-* **Quantization**: Converting high-precision floating-point numbers (FP32 or FP64) to lower-precision formats (e.g., FP8 or INT8) to reduce memory usage and increase inference speed.
-* **Sparsity**: Identifying and eliminating less important weights or connections in the model, which can significantly decrease memory footprint and computational requirements.
+== Understanding QuantizationRecipe
 
-=== 2. Using LLM Compressor to Create Optimized "ModelCars"
+LLM Compressor uses the `QuantizationRecipe` Custom Resource Definition (CRD) to define optimization jobs.
 
-The LLM Compressor is an essential tool for optimizing LLMs. Here's how to use it to create "ModelCars":
+=== Recipe Structure
 
-1. Install LLM Compressor: Follow the installation instructions provided in the official documentation.
-2. Prepare your LLM: Ensure your LLM is compatible with LLM Compressor and is in a suitable format (e.g., Hugging Face Transformers).
-3. Compress the model: Run the LLM Compressor with appropriate quantization and sparsity settings. For example:
+[source,yaml]
+----
+apiVersion: ai.redhat.com/v1alpha1
+kind: QuantizationRecipe
+metadata:
+  name: llama-3.1-8b-quantization
+  namespace: default
+spec:
+  model:           # Source model configuration
+  quantization:    # Quantization method and parameters
+  output:          # Output format and storage
+  resources:       # Resource requirements
+----
 
-   ::code-block python
-   python -m llm_compressor \
-   --model_name_or_path <path_to_your_model> \
-   --output_dir <output_directory> \
-   --quantization_method smoothquant \
-   --sparsity_method gptq
+== Step-by-Step: Creating a Quantization Recipe
 
-4. Create a Dockerfile: To containerize the optimized model, create a Dockerfile that includes necessary dependencies and the compressed model.
+=== Step 1: Define Model Source
 
-   ::code-block Dockerfile
-   FROM python:3.8-slim-buster
+**Model Source Options:**
+- HuggingFace: `huggingface://model-name`
+- S3: `s3://bucket/path`
+- PVC: `pvc://pvc-name/path`
+- RHOAI Model Registry: `registry://model-name`
 
-   WORKDIR /app
+**Example Configuration:**
 
-   COPY requirements.txt .
-   RUN pip install -r requirements.txt
+[source,yaml]
+----
+spec:
+  model:
+    name: meta-llama/Llama-3.1-8B
+    baseModel: llama-3.1-8b
+    source:
+      uri: huggingface://meta-llama/Llama-3.1-8B-Instruct
+      format: safetensors  # or pytorch, onnx
+----
 
-   COPY . .
+[NOTE]
+====
+**Documentation Gap**: Need to verify exact URI format for:
+- RHOAI Model Registry access
+- S3 credentials and configuration
+- PVC mount paths
+====
 
-   CMD ["python", "inference.py"]
+=== Step 2: Configure Quantization Method
 
-   # Add your compressed model to the container
-   COPY --from=0 <compressed_model_path> /app/<model_name>
+**SmoothQuant Configuration:**
 
-5. Build the ModelCar image
+[source,yaml]
+----
+spec:
+  quantization:
+    method: smoothquant
+    targetPrecision: int8
+    smoothquant:
+      alpha: 0.5  # Smoothing factor (0.0 to 1.0)
+      calibration:
+        dataset: <calibration-dataset-uri>
+        numSamples: 512  # Typical: 512-1024
+        batchSize: 8
+----
+
+**GPTQ Configuration:**
+
+[source,yaml]
+----
+spec:
+  quantization:
+    method: gptq
+    targetPrecision: int4  # or int8
+    gptq:
+      bits: 4
+      groupSize: 128
+      calibration:
+        dataset: <calibration-dataset-uri>
+        numSamples: 128  # GPTQ typically needs fewer samples
+        batchSize: 1
+----
+
+=== Step 3: Configure Calibration Dataset
+
+**Calibration Dataset Requirements:**
+- Format: Text files, JSON, or dataset URI
+- Size: 512-1024 samples (SmoothQuant), 128+ (GPTQ)
+- Content: Representative of your use case
+- Location: S3, PVC, or HuggingFace dataset
+
+**Example Dataset Sources:**
+- HuggingFace dataset: `dataset://wikitext`
+- S3: `s3://bucket/calibration-data/`
+- PVC: `pvc://pvc-name/calibration-data/`
+
+[WARNING]
+====
+**Important**: The calibration dataset should be representative of your actual use case. Using unrelated data can reduce quantization quality.
+====
+
+=== Step 4: Configure Output Storage
+
+**Output Options:**
+- PVC (Persistent Volume Claim)
+- S3 (S3-compatible storage)
+
+**PVC Configuration:**
+
+[source,yaml]
+----
+spec:
+  output:
+    format: onnx  # or safetensors, pytorch
+    storage:
+      type: pvc
+      pvc:
+        name: model-storage-pvc
+        path: models/llama-3.1-8b-quantized
+----
+
+**S3 Configuration:**
+
+[source,yaml]
+----
+spec:
+  output:
+    format: onnx
+    storage:
+      type: s3
+      s3:
+        bucket: my-model-bucket
+        prefix: models/llama-3.1-8b-quantized
+        endpoint: s3.amazonaws.com
+        credentials: s3-credentials-secret
+----
+
+=== Step 5: Set Resource Requirements
+
+**Typical Resource Requirements:**
+
+[source,yaml]
+----
+spec:
+  resources:
+    requests:
+      memory: "16Gi"
+      cpu: "4"
+      nvidia.com/gpu: 1
+    limits:
+      memory: "32Gi"
+      cpu: "8"
+      nvidia.com/gpu: 1
+----
+
+**Resource Guidelines:**
+- **GPU**: 1 GPU required (A10G or equivalent)
+- **Memory**: 16-32GB depending on model size
+- **CPU**: 4-8 cores for calibration processing
+- **Duration**: 30-60 minutes for Llama 3.1 8B
+
+== Complete Example: SmoothQuant Recipe
+
+[source,yaml]
+----
+apiVersion: ai.redhat.com/v1alpha1
+kind: QuantizationRecipe
+metadata:
+  name: llama-3.1-8b-smoothquant
+  namespace: lean-rag-accelerator
+spec:
+  model:
+    name: meta-llama/Llama-3.1-8B-Instruct
+    baseModel: llama-3.1-8b
+    source:
+      uri: huggingface://meta-llama/Llama-3.1-8B-Instruct
+      format: safetensors
+  
+  quantization:
+    method: smoothquant
+    targetPrecision: int8
+    smoothquant:
+      alpha: 0.5
+      calibration:
+        dataset: dataset://wikitext
+        numSamples: 512
+        batchSize: 8
+  
+  output:
+    format: onnx
+    storage:
+      type: pvc
+      pvc:
+        name: model-storage-pvc
+        path: models/llama-3.1-8b-int8
+  
+  resources:
+    requests:
+      memory: "16Gi"
+      cpu: "4"
+      nvidia.com/gpu: 1
+    limits:
+      memory: "32Gi"
+      cpu: "8"
+      nvidia.com/gpu: 1
+----
+
+== Deploying the Quantization Recipe
+
+=== Step 1: Apply the Recipe
+
+[source,bash]
+----
+kubectl apply -f quantization-recipe.yaml
+----
+
+=== Step 2: Monitor the Job
+
+[source,bash]
+----
+# Watch recipe status
+kubectl get quantizationrecipe llama-3.1-8b-smoothquant -w
+
+# Check job logs
+kubectl get jobs -l app=quantization
+kubectl logs -l app=quantization --tail=100 -f
+
+# Describe for detailed status
+kubectl describe quantizationrecipe llama-3.1-8b-smoothquant
+----
+
+=== Step 3: Verify Completion
+
+**Check Status:**
+
+[source,bash]
+----
+kubectl get quantizationrecipe llama-3.1-8b-smoothquant -o jsonpath='{.status.phase}'
+# Should show: Completed
+----
+
+**Get Output Location:**
+
+[source,bash]
+----
+kubectl get quantizationrecipe llama-3.1-8b-smoothquant -o jsonpath='{.status.output.storage.uri}'
+----
+
+=== Step 4: Verify Optimized Model
+
+**For PVC Storage:**
+
+[source,bash]
+----
+# List files in PVC
+oc rsh <pod-with-pvc-access> ls -lh /mnt/models/llama-3.1-8b-int8
+
+# Check model size (should be ~50% of original)
+oc rsh <pod-with-pvc-access> du -sh /mnt/models/llama-3.1-8b-int8
+----
+
+**Expected Results:**
+- Original (FP16): ~16GB
+- Quantized (INT8): ~8GB (50% reduction)
+- Format: ONNX or safetensors (as specified)
+
+== Troubleshooting
+
+=== Common Issues
+
+==== Issue: Calibration Dataset Not Found
+
+**Symptoms:**
+- Job fails with "dataset not found" error
+- Cannot access calibration data
+
+**Solutions:**
+- Verify dataset URI is correct
+- Check S3/PVC credentials and permissions
+- Ensure dataset format is supported
+
+==== Issue: Out of Memory
+
+**Symptoms:**
+- Job fails with OOM error
+- GPU memory exhausted
+
+**Solutions:**
+- Reduce `batchSize` in calibration config
+- Reduce `numSamples` (try 256 instead of 512)
+- Use larger GPU or reduce model size
+
+==== Issue: Quantization Fails
+
+**Symptoms:**
+- Job completes but model is invalid
+- Accuracy degradation is too high
+
+**Solutions:**
+- Verify calibration dataset is representative
+- Try different `alpha` value (SmoothQuant)
+- Use more calibration samples
+- Check model format compatibility
+
+==== Issue: Model Format Incompatibility
+
+**Symptoms:**
+- Cannot load quantized model
+- Format errors during inference
+
+**Solutions:**
+- Verify output format matches inference runtime
+- Check model format compatibility
+- Try different format (ONNX vs. safetensors)
+
+== Best Practices
+
+=== Calibration Dataset
+
+- **Size**: 512-1024 samples for SmoothQuant, 128+ for GPTQ
+- **Representativeness**: Should match your use case
+- **Format**: Use same format as production data
+- **Quality**: Use high-quality, diverse samples
+
+=== Resource Allocation
+
+- **GPU**: Always allocate 1 GPU for quantization
+- **Memory**: Allocate 2x model size for processing
+- **Time**: Allow 30-60 minutes for completion
+- **Monitoring**: Watch logs for progress
+
+=== Storage
+
+- **Location**: Use persistent storage (PVC or S3)
+- **Path**: Organize by model name and precision
+- **Backup**: Keep original models before quantization
+- **Versioning**: Tag quantized models with version
+
+== Integration with RHOAI 3.0
+
+=== Model Registry
+
+After quantization, you can:
+- Register model in RHOAI Model Catalog
+- Tag with metadata (precision, method, accuracy)
+- Share across teams and projects
+
+[NOTE]
+====
+**Documentation Gap**: Need details on:
+- How to register quantized models in Model Catalog
+- Model metadata schema
+- Sharing and access controls
+====
+
+=== Serving Integration
+
+Quantized models can be used with:
+- vLLM ServingRuntime
+- KServe InferenceService
+- llm-d orchestration
+
+**Example Reference in InferenceService:**
+
+[source,yaml]
+----
+spec:
+  predictor:
+    model:
+      storageUri: pvc://model-storage-pvc/models/llama-3.1-8b-int8
+----
+
+== Key Takeaways
+
+- LLM Compressor uses QuantizationRecipe CRD for Kubernetes-native optimization
+- SmoothQuant (INT8) is recommended for most deployments
+- Calibration dataset quality is critical for good results
+- Quantization takes 30-60 minutes for typical models
+- Output models are 50% smaller with 95%+ accuracy retention
+- Integrates seamlessly with RHOAI 3.0 serving stack
+
+== Next Steps
+
+- Learn about specific quantization recipes (SmoothQuant, GPTQ)
+- Understand how to access pre-optimized models from Model Catalog
+- Proceed to Module 3 for serving optimized models
+
+[NOTE]
+====
+**Documentation Gaps**: This section would benefit from:
+- Screenshots of QuantizationRecipe status in Kubernetes
+- Step-by-step video walkthrough
+- Complete calibration dataset preparation guide
+- Model Registry integration examples
+- Troubleshooting flowcharts
+====

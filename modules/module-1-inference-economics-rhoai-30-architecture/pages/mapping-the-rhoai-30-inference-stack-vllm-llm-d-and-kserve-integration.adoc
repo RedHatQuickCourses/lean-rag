@@ -7,13 +7,13 @@
 
 In this section, we will delve into the Red Hat AI (RHOAI) 3.0 inference stack, focusing on three key components: vLLM, llm-d, and KServe. Understanding their roles and integration is crucial for deploying and managing large language models (LLMs) at scale.
 
-== vLLM (Vector Longformer)
+== vLLM: The High-Performance Inference Engine
 
-vLLM is an optimized version of Longformer, designed for efficient vector storage and retrieval. It enables handling long sequences by employing a sliding window approach and sparse attention mechanisms. vLLM is crucial for managing the memory footprint of LLMs, especially when dealing with extensive context.
+vLLM is a state-of-the-art, enterprise-grade inference engine designed for raw speed and efficiency. It provides the horsepower for LLM inference through deep technical innovations like PagedAttention (which manages memory like an operating system), speculative decoding, and tensor parallelism. vLLM is the component responsible for executing inference workloads, managing GPU memory on the node, and delivering fast responses. It is optimized for maximum throughput and is ideal for serving models on a single node or a well-tuned multi-GPU cluster.
 
-== llm-d (Large Language Model Daemon)
+== llm-d: The Cloud-Native Orchestrator
 
-llm-d is a high-performance, distributed inference service for LLMs. It facilitates the deployment and management of LLMs across multiple GPUs and nodes, ensuring efficient resource utilization and minimizing latency. llm-d supports various inference techniques, such as PagedAttention and Continuous Batching, to maximize throughput.
+llm-d is a cloud-native distributed inference framework designed to orchestrate vLLM. Think of llm-d as the pit crew, race strategist, and telemetry system combined—it provides the cloud-native control plane that turns a high-performance engine into a winning inference system. llm-d disaggregates the inference process, breaking it down into manageable components to help scale effectively. It enables independent scaling of prefill and decode workers, expert-parallel scheduling for MoE models, KV cache-aware routing, and Kubernetes-native elasticity with KEDA and ArgoCD integration.
 
 == KServe
 
@@ -21,8 +21,14 @@ KServe is an open-source, Kubernetes-native model serving framework that simplif
 
 == Integration of vLLM, llm-d, and KServe
 
-The RHOAI 3.0 inference stack integrates vLLM, llm-d, and KServe to create a powerful, scalable, and efficient solution for serving LLMs. Here's a high-level overview of their integration:
+The RHOAI 3.0 inference stack integrates vLLM, llm-d, and KServe to create a powerful, scalable, and efficient solution for serving LLMs. It's important to understand that vLLM and llm-d are designed to work together, not as alternatives. Here's a high-level overview of their integration:
 
-1. **Model Preparation**: First, LLMs are prepared using vLLM for efficient vector storage and retrieval. This includes techniques like quantization and sparsity to reduce memory footprint.
+1. **Model Preparation**: First, LLMs are optimized using tools like LLM Compressor for quantization and sparsity to reduce memory footprint.
 
-2. **Deployment with llm-d**: The optimized LLMs are then deployed using llm-d for distributed inference. llm-d manages the allocation of GPUs and nodes, ensuring optimal resource utilization and
+2. **Inference Engine (vLLM)**: The optimized models are served using vLLM, which provides the high-performance inference engine. vLLM handles the actual model execution, GPU memory management, and delivers fast responses through innovations like PagedAttention and continuous batching.
+
+3. **Orchestration with llm-d**: llm-d orchestrates vLLM instances to provide production-grade capabilities. It separates prefill and decode phases (disaggregation), enables independent scaling, provides KV cache-aware routing, and integrates with Kubernetes for dynamic scaling.
+
+4. **Serving Framework (KServe)**: KServe provides the Kubernetes-native model serving framework, standardizing the API and enabling seamless integration with the vLLM/llm-d stack. It handles model versioning, A/B testing, and canary deployments.
+
+Together, this stack ensures that your AI infrastructure isn't just fast—it's championship-ready for production workloads.

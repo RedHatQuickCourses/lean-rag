@@ -1,12 +1,128 @@
-#  Module 3: High-Performance Serving with vLLM & llm-d
+= Module 3: High-Performance Serving with vLLM & llm-d
 
-```
-== Module 3: High-Performance Serving with vLLM & llm-d
+== Introduction
 
-This module focuses on optimizing the serving of large language models (LLMs) for high performance. Key topics include:
+This module covers how to deploy optimized models for maximum throughput using RHOAI 3.0's inference stack: vLLM (the high-performance engine) and llm-d (the cloud-native orchestrator). You'll learn how to achieve 2-4x throughput improvement and 85-90% GPU utilization.
 
-- **Configuring vLLM for Maximum Throughput**: Learn how to use PagedAttention and Continuous Batching to enhance vLLM's throughput.
-- **Tuning vLLM Engine Arguments**: Understand the impact of adjusting engine arguments like `--gpu-memory-utilization` and `--max-num-seqs` on performance.
-- **Distributed Inference with llm-d**: Discover how to deploy distributed inference, separating prefill and decode phases (disaggregation) for improved efficiency.
-- **Implementing Prefix Caching**: Explore the use of prefix caching to reuse Key-Value (KV) cache for RAG system prompts, further optimizing performance.
-```
+**Key Learning Objectives:**
+- Configure vLLM for maximum throughput
+- Tune vLLM engine arguments for optimal performance
+- Deploy distributed inference with llm-d
+- Implement prefix caching for RAG systems
+
+== Module Overview
+
+After optimizing your model (Module 2), the next step is deploying it for high-performance serving. RHOAI 3.0's inference stack provides:
+- **vLLM**: High-performance inference engine with PagedAttention
+- **llm-d**: Cloud-native orchestrator for production-scale deployments
+- **KServe**: Kubernetes-native serving framework
+
+=== Understanding the Ecosystem: Engine versus Platform
+
+**vLLM** is the high-performance Formula 1 car—the state-of-the-art inference engine that provides raw speed and efficiency through innovations like PagedAttention, speculative decoding, and tensor parallelism.
+
+**llm-d** is the pit crew, race strategist, and telemetry system combined—a cloud-native distributed inference framework that orchestrates vLLM to manage complex production workloads.
+
+**Important**: vLLM and llm-d are designed to work together, not as alternatives. llm-d does not replace vLLM—it enhances it.
+
+== Topics Covered
+
+=== Section 3.1: Configuring vLLM for Maximum Throughput
+
+Learn how to configure vLLM using PagedAttention and Continuous Batching:
+- PagedAttention architecture
+- Continuous batching mechanism
+- vLLM ServingRuntime configuration
+- Optimization arguments
+- Deployment steps
+
+**Duration**: 90-120 minutes
+
+=== Section 3.2: Tuning vLLM Engine Arguments
+
+Deep dive into vLLM parameter tuning:
+- GPU memory utilization
+- Concurrent request handling
+- Advanced tuning parameters
+- Performance profiling
+- Iterative optimization
+
+**Duration**: 75-90 minutes
+
+=== Section 3.3: Distributed Inference with llm-d
+
+Deploy llm-d for production-scale orchestration:
+- Prefill and decode phases
+- Disaggregation architecture
+- llm-d configuration
+- When to use llm-d
+- Deployment examples
+
+**Duration**: 90-120 minutes
+
+=== Section 3.4: Prefix Caching for RAG
+
+Implement prefix caching for RAG systems:
+- KV cache reuse concepts
+- Prefix caching configuration
+- RAG-specific benefits
+- Performance impact
+
+**Duration**: 60-75 minutes
+
+== When to Use vLLM Alone vs. vLLM + llm-d
+
+=== Start with vLLM Alone When:
+
+- Single node deployments
+- Well-tuned multi-GPU clusters
+- Simpler workloads with predictable traffic patterns
+- Development and testing environments
+
+=== Add llm-d When You Need:
+
+- Independent scaling of prefill and decode workers
+- MoE model support (models too large for single GPU)
+- KV cache-aware routing for RAG systems
+- Kubernetes-native elasticity with KEDA/ArgoCD
+- Production telemetry and observability
+
+== Prerequisites
+
+Before starting this module, ensure you have:
+- Completed Module 2 (have an optimized model ready)
+- Red Hat OpenShift AI 3.0 installed
+- KServe configured
+- Access to GPU nodes
+- Basic Kubernetes knowledge
+
+== Expected Outcomes
+
+By the end of this module, you will be able to:
+- Configure vLLM for maximum throughput
+- Tune vLLM parameters for optimal performance
+- Deploy llm-d for distributed inference
+- Implement prefix caching
+- Achieve 2-4x throughput improvement
+
+== Module Structure
+
+This module follows a practical, hands-on approach:
+
+1. **Configuration**: Learn vLLM setup and optimization
+2. **Tuning**: Iteratively optimize performance
+3. **Scaling**: Add llm-d for production capabilities
+4. **Optimization**: Implement advanced features like prefix caching
+
+== Next Steps
+
+After completing this module:
+- Proceed to Module 4 to learn about RAG implementation
+- Deploy your optimized model with vLLM/llm-d
+- Measure performance improvements
+
+== Related Resources
+
+- link:module-2-model-optimization-with-llm-compressor.adoc[Module 2: Model Optimization] - Previous module
+- link:module-4-standardized-rag-implementation.adoc[Module 4: Standardized RAG] - Next module
+- link:../../lean-rag-accelerator/examples/02-inference-serving/README.md[Inference Serving Examples] - Quickstart code

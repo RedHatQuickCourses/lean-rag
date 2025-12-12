@@ -10,8 +10,9 @@
 │  ┌──────────────────┐    ┌──────────────────┐               │
 │  │  Model          │    │  Inference       │               │
 │  │  Optimization   │───▶│  Serving         │               │
-│  │  (LLM Compressor)│    │  (vLLM + KServe) │               │
-│  └──────────────────┘    └──────────────────┘               │
+│  │  (LLM Compressor)│    │  (vLLM + llm-d   │               │
+│  └──────────────────┘    │   + KServe)      │               │
+│                          └──────────────────┘               │
 │         │                        │                            │
 │         │                        ▼                            │
 │         │              ┌──────────────────┐                  │
@@ -53,17 +54,37 @@
 
 ### 2. Inference Serving Layer
 
-**Technology**: vLLM + KServe  
-**Purpose**: High-performance model serving  
-**Optimizations**:
-- `--gpu-memory-utilization=0.9`: Maximize GPU usage
-- `--kv-cache-dtype=fp8`: Memory-efficient KV cache
-- Tensor parallelism for scaling
+**Technology**: vLLM + llm-d + KServe  
+**Purpose**: High-performance model serving with cloud-native orchestration
+
+**vLLM: The High-Performance Engine**
+- State-of-the-art inference engine designed for raw speed and efficiency
+- Optimizations:
+  - `--gpu-memory-utilization=0.9`: Maximize GPU usage
+  - `--kv-cache-dtype=fp8`: Memory-efficient KV cache
+  - PagedAttention for efficient memory management
+  - Tensor parallelism for scaling
+- Executes inference workloads and manages GPU memory on the node
+
+**llm-d: The Cloud-Native Orchestrator**
+- Orchestrates vLLM instances for production-scale deployments
+- Key capabilities:
+  - Independent scaling of prefill and decode workers (disaggregation)
+  - Expert-parallel scheduling for MoE models
+  - KV cache-aware routing for prefix cache reuse
+  - Kubernetes-native elasticity with KEDA and ArgoCD
+  - Granular telemetry with per-token metrics
+
+**KServe: The Serving Framework**
+- Kubernetes-native model serving framework
+- Standardized API and integration layer
 
 **Key Benefits**:
-- High throughput
-- Low latency
+- High throughput (vLLM engine)
+- Low latency (optimized memory management)
 - Efficient GPU utilization
+- Production-ready scaling and orchestration (llm-d)
+- Cloud-native elasticity and observability
 
 ### 3. RAG Application Layer
 
@@ -86,7 +107,8 @@
 | Component | Technology | Version | Purpose |
 |-----------|-----------|---------|---------|
 | Model Optimization | LLM Compressor | [TBD] | Quantization |
-| Inference Runtime | vLLM | [TBD] | Model serving |
+| Inference Engine | vLLM | [TBD] | High-performance model serving |
+| Orchestration | llm-d | [TBD] | Cloud-native distributed inference |
 | Serving Framework | KServe | [TBD] | Kubernetes-native serving |
 | RAG Orchestration | Llama Stack | [TBD] | RAG pipeline |
 | Document Processing | Docling | [TBD] | Document ingestion |
@@ -124,9 +146,18 @@
 
 ### Why vLLM?
 
-- High-performance inference engine
-- Optimized memory management
-- PagedAttention for efficient KV cache
+- High-performance inference engine designed for raw speed and efficiency
+- Optimized memory management through PagedAttention
+- Enterprise-grade with innovations like speculative decoding and tensor parallelism
+- Ideal for single node or well-tuned multi-GPU clusters
+
+### Why llm-d?
+
+- Cloud-native distributed inference framework that orchestrates vLLM
+- Enables production-scale deployments with disaggregated prefill/decode phases
+- Provides Kubernetes-native elasticity, KV cache-aware routing, and expert-parallel scheduling
+- Transforms a high-performance engine into a championship-ready inference system
+- Note: llm-d does not replace vLLM—it enhances it by providing orchestration capabilities
 
 ### Why Llama Stack?
 
