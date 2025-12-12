@@ -251,13 +251,36 @@ curl -X POST $INGRESS_HOST/v1/completions \
 
 ### Step 2.6: Optional - Deploy llm-d for Distributed Inference
 
-For higher throughput, deploy llm-d:
+#### When to Use llm-d
+
+Deploying vLLM on its own (as in Step 2.5) is a fantastic way to get started and is ideal for:
+- Single node deployments
+- Well-tuned multi-GPU clusters
+- Simpler workloads with predictable traffic patterns
+- Development and testing environments
+
+As you move toward a globally scalable LLM service, you'll likely need more than just the engine. Consider deploying llm-d when you need:
+
+- **Independent scaling**: Scale prefill and decode workers separately based on workload characteristics
+- **MoE model support**: Run massive Mixture of Experts models that are too large for a single GPU setup
+- **KV cache optimization**: Leverage prefix cache reuse to reduce latency and compute costs for RAG systems with repeated prompts
+- **Kubernetes-native elasticity**: Dynamic scaling based on real-time demand with KEDA and ArgoCD integration
+- **Production telemetry**: Per-token metrics like time to first token, KV cache hit rate, and GPU memory pressure
+
+#### Deploying llm-d
+
+llm-d orchestrates your existing vLLM instances, so ensure vLLM is deployed first (Steps 2.1-2.5). Then deploy llm-d:
 
 ```bash
 kubectl apply -f llm-d-configuration.yaml
 ```
 
-This separates prefill and decode phases for maximum efficiency.
+This enables:
+- **Disaggregation**: Separates prefill and decode phases for maximum efficiency
+- **Intelligent routing**: KV cache-aware routing to workers with cached prefixes
+- **Dynamic scaling**: Kubernetes-native elasticity for production workloads
+
+**Important**: llm-d does not replace vLLM—it enhances it by providing cloud-native orchestration capabilities. Together, they create a championship-ready inference system.
 
 ## Stage 3: RAG Application
 

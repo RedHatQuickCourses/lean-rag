@@ -1,37 +1,530 @@
-#  configuring vLLM for maximum throughput using PagedAttention and Continuous Batching
-
-```
 = Configuring vLLM for Maximum Throughput Using PagedAttention and Continuous Batching
 
-== Objective
+== Introduction
 
-In this section, we will explore techniques to optimize the performance of vLLM for maximum throughput using PagedAttention and Continuous Batching.
+vLLM is the high-performance inference engine in RHOAI 3.0's inference stack. This section covers configuring vLLM for maximum throughput using its key innovations: PagedAttention and Continuous Batching.
 
-== PagedAttention
+**Expected Results:**
+- 2-4x throughput improvement over baseline
+- 85-90% GPU utilization (up from <40%)
+- <100ms Time to First Token (TTFT)
+- 10-20 concurrent requests per GPU
 
-PagedAttention is a method used in large language models (LLMs) to manage memory usage and improve inference speed. It divides the input sequence into smaller pages, allowing the model to process each page independently. This approach significantly reduces the memory footprint and enables the model to handle longer sequences.
+== Understanding PagedAttention
 
-To configure vLLM with PagedAttention:
+=== What is PagedAttention?
 
-1. Set the `paged_attention` flag to `true` in the vLLM configuration file.
-2. Define the `page_size` parameter to specify the number of tokens in each page. A larger page size can improve throughput but may increase memory usage.
-3. Adjust the `attention_layers` parameter to control the depth of attention mechanisms applied within each page.
+PagedAttention is vLLM's memory management system that eliminates memory fragmentation in KV cache. It works like an operating system's virtual memory:
 
-== Continuous Batching
+**Traditional Approach (Problem):**
+- Fixed-size memory blocks per request
+- Blocks cannot be reused
+- Memory fragmentation prevents batching
+- GPU memory appears "full" but is fragmented
 
-Continuous Batching is a technique that allows vLLM to maintain a continuous stream of inference requests, reducing the overhead associated with batching new requests. This method is particularly effective when dealing with real-time or low-latency applications.
+**PagedAttention (Solution):**
+- Divides KV cache into fixed-size pages (16KB blocks)
+- Pages can be allocated/deallocated dynamically
+- Eliminates fragmentation
+- Enables efficient continuous batching
 
-To enable Continuous Batching in vLLM:
+=== How PagedAttention Works
 
-1. Set the `continuous_batching` flag to `true` in the vLLM configuration file.
-2. Define the `batch_size` parameter to specify the number of inference requests to process in each batch. A larger batch size can improve throughput but may increase latency.
-3. Adjust the `prefetch_factor` parameter to control the number of batches prefetched ahead of the current one. Increasing this value can help maintain a steady inference rate but may consume more memory.
+**Memory Layout:**
 
-== Hands-on Activity: Optimizing vLLM with PagedAttention and Continuous Batching
+```
+Traditional (Fragmented):
+[Request1: 2GB][Free: 0.5GB][Request2: 2GB][Free: 0.3GB][Request3: 2GB]
+                    ↑ Cannot allocate 2GB for Request4 (fragmented)
 
-1. Locate the vLLM configuration file (e.g., `vllm.yaml`).
-2. Modify the configuration file to include PagedAttention and Continuous Batching settings as described above.
-3. Test the optimized vLLM configuration with a representative workload to measure throughput improvements.
-4. Adjust the `page_size`, `batch_size`, and `prefetch_factor` parameters iteratively to find the optimal balance between throughput and resource usage.
+PagedAttention (Paged):
+[Page1][Page2][Page3][Page4][Page5][Page6][Page7][Page8]...
+  ↑ Pages can be allocated/deallocated dynamically
+  ↑ No fragmentation - any free page can be used
+```
+
+**Benefits:**
+- **No Fragmentation**: Memory can be used efficiently
+- **Dynamic Allocation**: Pages allocated as needed
+- **Better Batching**: Can batch more requests
+- **Higher Throughput**: 2-4x improvement
+
+=== PagedAttention Configuration
+
+**PagedAttention is enabled by default in vLLM** - no explicit configuration needed. However, you can tune related parameters:
+
+**Key Parameters:**
+- `--block-size`: Size of memory blocks (default: 16, typically don't change)
+- `--gpu-memory-utilization`: How much GPU memory to use (0.9 recommended)
+- `--max-num-seqs`: Maximum concurrent sequences (affects batching)
+
+== Understanding Continuous Batching
+
+=== What is Continuous Batching?
+
+Continuous Batching (also called "iteration-level batching") allows vLLM to:
+- Add new requests to batch as GPU processes
+- Remove completed requests from batch
+- Keep GPU constantly busy
+- Process requests of different lengths efficiently
+
+**Traditional Batching (Problem):**
+- Wait for batch to fill before processing
+- Process entire batch together
+- GPU idle while waiting for new requests
+- Inefficient for variable-length requests
+
+**Continuous Batching (Solution):**
+- Add requests dynamically as they arrive
+- Remove completed requests immediately
+- GPU always processing
+- Efficient for variable-length requests
+
+=== How Continuous Batching Works
+
+**Timeline Example:**
+
+```
+Traditional Batching:
+Time 0: [Request1, Request2] → Process
+Time 1: [Request3, Request4] → Wait for batch
+Time 2: [Request3, Request4] → Process
+Time 3: [Request5] → Wait for more requests
+Time 4: [Request5, Request6] → Process
+        ↑ GPU idle 40% of time
+
+Continuous Batching:
+Time 0: [Request1, Request2] → Process
+Time 1: [Request1, Request2, Request3] → Add Request3, continue
+Time 2: [Request2, Request3, Request4] → Request1 done, add Request4
+Time 3: [Request3, Request4, Request5] → Request2 done, add Request5
+        ↑ GPU busy 95% of time
+```
+
+**Benefits:**
+- **No Waiting**: GPU always processing
+- **Dynamic Batching**: Adapts to request arrival
+- **Better Utilization**: 85-90% vs. <40%
+- **Lower Latency**: No waiting for batch to fill
+
+=== Continuous Batching Configuration
+
+**Continuous Batching is enabled by default in vLLM** - no explicit flag needed. Tune with:
+
+**Key Parameters:**
+- `--max-num-seqs`: Maximum concurrent sequences (default: 256, tune based on GPU memory)
+- `--gpu-memory-utilization`: How much memory to use (0.9 for maximum throughput)
+
+== vLLM Configuration for Maximum Throughput
+
+=== Basic vLLM ServingRuntime Configuration
+
+[source,yaml]
+----
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: vllm-runtime
+  namespace: default
+spec:
+  supportedModelFormats:
+    - name: llama
+      version: "1"
+      autoSelect: true
+  
+  containers:
+    - name: vllm
+      image: <vllm-image>  # e.g., vllm/vllm-openai:latest
+      args:
+        - --model
+        - /mnt/models
+        - --host
+        - "0.0.0.0"
+        - --port
+        - "8000"
+        # Key optimization arguments:
+        - --gpu-memory-utilization
+        - "0.9"  # Use 90% of GPU memory
+        - --kv-cache-dtype
+        - "fp8"  # FP8 KV cache (memory efficient)
+        - --tensor-parallel-size
+        - "1"  # Adjust for multi-GPU
+        - --max-model-len
+        - "8192"  # Context length
+      
+      resources:
+        requests:
+          memory: "16Gi"
+          cpu: "4"
+          nvidia.com/gpu: 1
+        limits:
+          memory: "32Gi"
+          cpu: "8"
+          nvidia.com/gpu: 1
+      
+      volumeMounts:
+        - name: model-storage
+          mountPath: /mnt/models
+          readOnly: true
+  volumes:
+    - name: model-storage
+      persistentVolumeClaim:
+        claimName: model-storage-pvc
+----
+
+=== Key Optimization Arguments
+
+==== --gpu-memory-utilization
+
+**Purpose**: Controls how much GPU memory vLLM uses
+
+**Recommended Value**: `0.9` (90%)
+
+**Impact:**
+- Higher value = more concurrent requests = higher throughput
+- Lower value = safer but lower throughput
+- 0.9 maximizes GPU utilization while leaving safety margin
+
+**Example:**
+[source]
+----
+--gpu-memory-utilization 0.9  # Use 90% of GPU memory
+----
+
+==== --kv-cache-dtype
+
+**Purpose**: Precision for KV cache storage
+
+**Options:**
+- `auto`: Default, uses model precision
+- `fp8`: 8-bit floating point (recommended)
+- `fp16`: 16-bit floating point
+
+**Recommended**: `fp8` for memory efficiency
+
+**Impact:**
+- FP8: 50% memory reduction, minimal accuracy impact
+- Enables 2x more concurrent requests
+- Better GPU utilization
+
+**Example:**
+[source]
+----
+--kv-cache-dtype fp8  # Use FP8 for KV cache
+----
+
+==== --max-num-seqs
+
+**Purpose**: Maximum number of concurrent sequences
+
+**Default**: 256
+
+**Tuning:**
+- Higher = more concurrent requests = higher throughput
+- Limited by GPU memory
+- Start with default, increase if memory allows
+
+**Calculation:**
+- GPU memory: 24GB
+- Model: 8GB
+- Available for KV cache: ~16GB
+- Per request KV cache: ~2GB (8K context)
+- Max sequences: ~8 (conservative) to 16 (aggressive)
+
+**Example:**
+[source]
+----
+--max-num-seqs 16  # Allow 16 concurrent sequences
+----
+
+==== --tensor-parallel-size
+
+**Purpose**: Number of GPUs for tensor parallelism
+
+**Options:**
+- `1`: Single GPU (default)
+- `2+`: Multi-GPU (requires multiple GPUs)
+
+**Use Cases:**
+- Single GPU: Use `1`
+- Multi-GPU node: Use number of GPUs
+- Distributed: Use with pipeline parallelism
+
+**Example:**
+[source]
+----
+--tensor-parallel-size 1  # Single GPU
+--tensor-parallel-size 2  # Two GPUs
+----
+
+==== --max-model-len
+
+**Purpose**: Maximum context length
+
+**Default**: Model-dependent
+
+**Configuration:**
+- Set based on your use case
+- Longer context = more memory per request
+- Shorter context = more concurrent requests
+
+**Example:**
+[source]
+----
+--max-model-len 8192  # 8K context for Llama 3.1 8B
+----
+
+== Complete Optimized Configuration
+
+[source,yaml]
+----
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: vllm-runtime-optimized
+  namespace: lean-rag-accelerator
+spec:
+  supportedModelFormats:
+    - name: llama
+      version: "1"
+      autoSelect: true
+    - name: onnx
+      version: "1"
+      autoSelect: false
+  
+  multiModel: false
+  grpcDataEndpoint: port:8001
+  
+  containers:
+    - name: vllm
+      image: vllm/vllm-openai:latest  # Update with your vLLM image
+      imagePullPolicy: IfNotPresent
+      
+      args:
+        - --model
+        - /mnt/models
+        - --host
+        - "0.0.0.0"
+        - --port
+        - "8000"
+        # Throughput optimizations:
+        - --gpu-memory-utilization
+        - "0.9"  # Maximize GPU usage
+        - --kv-cache-dtype
+        - "fp8"  # Memory-efficient KV cache
+        - --max-num-seqs
+        - "16"  # Concurrent sequences (tune based on memory)
+        - --tensor-parallel-size
+        - "1"  # Single GPU
+        - --max-model-len
+        - "8192"  # Context length
+        - --trust-remote-code
+        - --disable-log-requests  # Optional: disable for performance
+      
+      env:
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+      
+      ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        - containerPort: 8001
+          name: grpc
+          protocol: TCP
+      
+      resources:
+        requests:
+          memory: "16Gi"
+          cpu: "4"
+          nvidia.com/gpu: 1
+        limits:
+          memory: "32Gi"
+          cpu: "8"
+          nvidia.com/gpu: 1
+      
+      volumeMounts:
+        - name: model-storage
+          mountPath: /mnt/models
+          readOnly: true
+  
+  volumes:
+    - name: model-storage
+      persistentVolumeClaim:
+        claimName: model-storage-pvc
+----
+
+== Deploying vLLM Runtime
+
+=== Step 1: Deploy ServingRuntime
+
+[source,bash]
+----
+kubectl apply -f vllm-runtime.yaml
+----
+
+=== Step 2: Verify Deployment
+
+[source,bash]
+----
+kubectl get servingruntime vllm-runtime
+kubectl describe servingruntime vllm-runtime
+----
+
+=== Step 3: Deploy InferenceService
+
+[source,yaml]
+----
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: lean-rag-inference
+  namespace: lean-rag-accelerator
+spec:
+  predictor:
+    model:
+      storageUri: pvc://model-storage-pvc/models/llama-3.1-8b-int8
+    runtime: vllm-runtime
+    resources:
+      limits:
+        nvidia.com/gpu: 1
+----
+
+[source,bash]
+----
+kubectl apply -f kserve-inferenceservice.yaml
+----
+
+=== Step 4: Monitor Deployment
+
+[source,bash]
+----
+# Watch service status
+kubectl get inferenceservice lean-rag-inference -w
+
+# Check pods
+kubectl get pods -l serving.kserve.io/inferenceservice=lean-rag-inference
+
+# Wait for Ready status (3/3)
+kubectl get pods -l component=predictor
+----
+
+=== Step 5: Test Inference
+
+[source,bash]
+----
+# Get service endpoint
+INGRESS_HOST=$(kubectl get inferenceservice lean-rag-inference -o jsonpath='{.status.url}')
+
+# Test inference
+curl -X POST $INGRESS_HOST/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "What is the capital of France?",
+    "max_tokens": 50,
+    "temperature": 0.7
+  }'
+----
+
+== Performance Tuning
+
+=== Baseline Measurement
+
+**Measure before optimization:**
+- Throughput (requests/second)
+- GPU utilization (%)
+- Latency (TTFT, ITL)
+- Memory usage
+
+=== Iterative Tuning
+
+**Step 1: Start Conservative**
+- `--gpu-memory-utilization=0.7`
+- `--max-num-seqs=8`
+- Measure performance
+
+**Step 2: Increase Gradually**
+- Increase to `0.8`, then `0.9`
+- Increase `max-num-seqs` if memory allows
+- Monitor for OOM errors
+
+**Step 3: Optimize Further**
+- Enable FP8 KV cache
+- Tune context length
+- Test with production workload
+
+=== Expected Results
+
+**Before Optimization:**
+- Throughput: 5 RPS
+- GPU Utilization: 38%
+- TTFT: 150ms
+
+**After Optimization:**
+- Throughput: 15-20 RPS (3-4x)
+- GPU Utilization: 85-90%
+- TTFT: <100ms
 
 == Troubleshooting
+
+=== GPU Out of Memory (OOM)
+
+**Symptoms:**
+- Pod crashes with OOM error
+- Cannot load model
+
+**Solutions:**
+- Reduce `--gpu-memory-utilization` (try 0.7)
+- Reduce `--max-num-seqs`
+- Use quantized model (INT8)
+- Use smaller context length
+
+=== Low Throughput
+
+**Symptoms:**
+- Throughput lower than expected
+- GPU utilization low
+
+**Solutions:**
+- Increase `--gpu-memory-utilization` to 0.9
+- Increase `--max-num-seqs`
+- Enable FP8 KV cache
+- Check for bottlenecks (network, storage)
+
+=== High Latency
+
+**Symptoms:**
+- TTFT >100ms
+- Slow response times
+
+**Solutions:**
+- Verify model is loaded correctly
+- Check GPU availability
+- Reduce batch size if too large
+- Check for resource contention
+
+== Key Takeaways
+
+- PagedAttention eliminates memory fragmentation (enabled by default)
+- Continuous Batching keeps GPU busy (enabled by default)
+- `--gpu-memory-utilization=0.9` maximizes throughput
+- `--kv-cache-dtype=fp8` reduces memory by 50%
+- `--max-num-seqs` controls concurrent requests
+- 2-4x throughput improvement is achievable
+- 85-90% GPU utilization is the target
+
+== Next Steps
+
+- Learn about tuning vLLM engine arguments
+- Understand when to use llm-d for distributed inference
+- Explore prefix caching for RAG systems
+
+[NOTE]
+====
+**Documentation Gaps**: This section would benefit from:
+- Visual diagram of PagedAttention memory layout
+- Animation/video of continuous batching in action
+- Performance tuning decision tree
+- Real benchmark results with different configurations
+- Screenshots of GPU utilization before/after
+====

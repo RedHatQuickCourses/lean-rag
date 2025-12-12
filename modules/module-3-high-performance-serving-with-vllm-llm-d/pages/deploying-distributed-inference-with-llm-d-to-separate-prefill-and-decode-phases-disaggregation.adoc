@@ -9,33 +9,70 @@ In this module, we will focus on deploying distributed inference using llm-d to 
 
 === 3.3 Deploying Distributed Inference with llm-d
 
-llm-d is a high-performance inference serving framework designed to handle large language models (LLMs) efficiently. It enables the separation of the prefill and decode phases, which are computationally intensive and can benefit from parallel processing.
+llm-d is a cloud-native distributed inference framework designed to orchestrate vLLM. It acknowledges that a single inference engine needs support to manage complex production workloads. llm-d disaggregates the inference process, breaking it down into manageable components to help scale effectively.
+
+Important: llm-d does not replace vLLM—it enhances it. When you pair the engine (vLLM) with the orchestrator (llm-d), you unlock specific integrations that solve complex production hurdles.
 
 === 3.3.1 Understanding Prefill and Decode Phases
 
-In the context of LLMs, the prefill phase involves loading the context into the model, while the decode phase generates the output based on the loaded context. By separating these phases, we can optimize resource allocation and reduce latency.
+LLM generation consists of two distinct phases, each with different computational characteristics:
 
-=== 3.3.2 Deploying llm-d for Disaggregation
+1. **The "prefill" phase (the formation lap)**: This is analogous to a Formula 1 formation lap where drivers warm their tires and check systems. In LLMs, this is where the system processes the user's prompt and calculates the initial Key-Value (KV) cache. This phase is compute-intensive and heavy, requiring significant GPU resources to process the entire prompt in parallel.
+
+2. **The "decode" phase (the race)**: This is the fast, iterative race itself. The model generates one token at a time in an autoregressive manner. This phase requires high-speed memory bandwidth to access and produce new tokens quickly, but is less compute-intensive than prefill.
+
+In a standard setup, one machine handles both phases. However, by separating these phases, llm-d acts as race control, using prefix-aware routing to determine which backend handles which request, ensuring optimal resource utilization for each phase.
+
+=== 3.3.2 Production Features Enabled by llm-d
+
+When orchestrating vLLM, llm-d provides several key production capabilities:
+
+* **Independent scaling (disaggregation)**: You can serve multibillion parameter LLMs with disaggregated prefill and decode workers. Because llm-d separates these phases, you can scale your "warm-up" resources independently from your "race" resources, optimizing hardware utilization.
+
+* **Expert-parallel scheduling for MoE**: For massive Mixture of Experts (MoE) models, llm-d enables expert-parallel scheduling. This enables different "experts" within the model to be distributed across various vLLM nodes, allowing you to run models that are too large for a single GPU setup.
+
+* **KV cache-aware routing**: This is the equivalent of a pit crew knowing exactly how worn the tires are. llm-d intelligently reuses cached KV pairs from previous requests (prefix cache reuse). By routing a request to a worker that has seen similar data before, it reduces latency and compute costs.
+
+* **Kubernetes-native elasticity (KEDA & ArgoCD)**: This is where llm-d shines as a platform. It integrates seamlessly with KEDA (Kubernetes event-driven autoscaling) and ArgoCD. This allows the system to dynamically scale the fleet of vLLM "cars" up or down based on real-time demand, enabling high availability without burning budget on idling GPUs.
+
+* **Granular telemetry**: llm-d acts as the race engineer, observing per-token metrics like time to first token, KV cache hit rate, and GPU memory pressure.
+
+=== 3.3.3 Deploying llm-d for Disaggregation
 
 To deploy distributed inference with llm-d, follow these steps:
 
-1. **Install llm-d**: Ensure llm-d is installed and configured in your environment. Refer to the official llm-d documentation for installation instructions.
+1. **Ensure vLLM is deployed**: llm-d orchestrates vLLM, so you need vLLM instances running first. Refer to the vLLM configuration sections earlier in this module.
 
-2. **Prepare Your Model**: Ensure your LLM model is compatible with llm-d. This typically involves wrapping your model with a compatible serving interface, such as the Hugging Face Transformers `Pipeline` class.
+2. **Install llm-d**: Ensure llm-d is installed and configured in your environment. Refer to the official llm-d documentation for installation instructions.
 
-3. **Configure llm-d**: Create a configuration file for llm-d, specifying the number of workers for prefill and decode phases. For example:
+3. **Configure llm-d**: Create a configuration file for llm-d, specifying the number of workers for prefill and decode phases. Example configuration:
 
    ::code-block[yaml]
-   workers:
-     prefill: 4
-     decode: 4
+   cluster:
+     numNodes: 2
+     nodeSelector:
+       nvidia.com/gpu.present: "true"
+     resources:
+       gpu: 1
+       memory: "16Gi"
+       cpu: "4"
+   
+   inference:
+     batchSize: 32
+     maxConcurrentRequests: 100
+     gpuMemoryUtilization: 0.9
+     kvCacheDtype: "fp8"
 
-4. **Start llm-d**: Launch llm-d with your configuration file:
+4. **Deploy llm-d coordinator**: Apply the llm-d configuration to your Kubernetes cluster:
 
    ::code-block[shell]
-   llm-d --config /path/to/your/config.yaml
+   kubectl apply -f llm-d-configuration.yaml
 
-5. **Send Inference Requests**: Use the llm-d client to send inference requests. The client will automatically route prefill and decode requests to the respective workers.
+5. **Verify deployment**: Check that llm-d is properly orchestrating your vLLM instances:
+
+   ::code-block[shell]
+   kubectl get pods -l component=llm-d-coordinator
+   kubectl get pods -l app=vllm
 
 === 3.3.3 Tuning llm-d for Optimal Performance
 

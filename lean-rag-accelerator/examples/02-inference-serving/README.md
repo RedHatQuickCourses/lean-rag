@@ -2,15 +2,39 @@
 
 ## Overview
 
-This directory contains configurations for deploying the optimized model using vLLM and KServe. The setup maximizes GPU utilization and throughput while maintaining low latency.
+This directory contains configurations for deploying the optimized model using vLLM, llm-d, and KServe. The setup maximizes GPU utilization and throughput while maintaining low latency.
+
+### Understanding vLLM and llm-d
+
+**vLLM** is the high-performance inference engine—think of it as a Formula 1 car designed for raw speed and efficiency. It executes inference workloads, manages GPU memory, and delivers fast responses through innovations like PagedAttention, speculative decoding, and tensor parallelism.
+
+**llm-d** is the cloud-native orchestrator—think of it as the pit crew, race strategist, and telemetry system combined. It orchestrates vLLM instances to provide production-grade capabilities like independent scaling of prefill/decode phases, KV cache-aware routing, and Kubernetes-native elasticity.
+
+**Important**: llm-d does not replace vLLM—it enhances it. Together, they create a championship-ready inference system. You can start with vLLM alone and add llm-d when you need production-scale orchestration.
 
 ## Files
 
-- `vllm-runtime.yaml`: KServe ServingRuntime for vLLM
+- `vllm-runtime.yaml`: KServe ServingRuntime for vLLM (the inference engine)
 - `kserve-inferenceservice.yaml`: KServe InferenceService definition
-- `llm-d-configuration.yaml`: Optional llm-d configuration for distributed inference
+- `llm-d-configuration.yaml`: Optional llm-d configuration for production-scale orchestration
+
+## When to Use llm-d
+
+Start with vLLM alone for:
+- Single node deployments
+- Development and testing
+- Simpler workloads with predictable traffic
+
+Add llm-d when you need:
+- Independent scaling of prefill and decode workers
+- MoE model support (models too large for single GPU)
+- KV cache-aware routing for RAG systems with repeated prompts
+- Kubernetes-native elasticity with KEDA/ArgoCD
+- Production telemetry and observability
 
 ## Architecture
+
+### Basic Setup (vLLM + KServe)
 
 ```
 ┌─────────────────────────────────────┐
@@ -24,6 +48,31 @@ This directory contains configurations for deploying the optimized model using v
 │           │                        │
 │           ▼                        │
 │  Optimized Model (from step 1)     │
+└─────────────────────────────────────┘
+```
+
+### Production Setup (vLLM + llm-d + KServe)
+
+```
+┌─────────────────────────────────────┐
+│     KServe InferenceService        │
+│  ┌───────────────────────────────┐ │
+│  │   llm-d Coordinator           │ │
+│  │   - Prefill/Decode Routing    │ │
+│  │   - KV Cache-Aware Routing    │ │
+│  │   - Kubernetes Elasticity     │ │
+│  └───────────────────────────────┘ │
+│           │                        │
+│           ├──────────────────────┐ │
+│           ▼                      ▼ │
+│  ┌──────────────┐      ┌──────────────┐ │
+│  │ vLLM Workers │      │ vLLM Workers │ │
+│  │ (Prefill)    │      │ (Decode)     │ │
+│  └──────────────┘      └──────────────┘ │
+│           │                      │      │
+│           └──────────┬───────────┘      │
+│                      ▼                  │
+│         Optimized Model (from step 1)   │
 └─────────────────────────────────────┘
 ```
 
