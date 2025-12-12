@@ -1,52 +1,482 @@
-#  Ingesting and chunking unstructured enterprise data (PDFs) using Docling
+= Ingesting and Chunking Unstructured Enterprise Data using Docling
 
-```
-= Ingesting and Chunking Unstructured Enterprise Data (PDFs) using Docling
+== Introduction
 
-== Module 4: Standardized RAG Implementation
+**Docling** is a Python library that transforms raw unstructured data (PDFs, images, audio files) into structured, machine-readable formats that RAG pipelines can consume. It's used in end-to-end workflows for preparing documents for RAG systems.
 
-In this module, we will focus on ingesting and chunking unstructured enterprise data, specifically PDFs, using Docling. This process is crucial for preparing the data for the Retrieval-Augmented Generation (RAG) system.
+**Key Capabilities:**
+- PDF text extraction with OCR
+- Table extraction and formatting
+- Image processing
+- Structured output formats
+- Metadata extraction
 
-=== 4.1. Understanding Docling
+== Understanding Docling
 
-Docling is an open-source tool designed to extract text from various document formats, including PDFs, and convert them into a structured format suitable for machine learning tasks. It leverages advanced Optical Character Recognition (OCR) techniques to ensure high accuracy in text extraction.
+=== What is Docling?
 
-=== 4.2. Setting Up Docling
+Docling is a Python library designed for enterprise document processing. It handles:
+- **PDF Processing**: Extract text, tables, images from PDFs
+- **OCR**: Optical Character Recognition for scanned documents
+- **Structured Output**: Convert unstructured documents to structured formats
+- **Metadata Extraction**: Extract titles, authors, dates, keywords
 
-To use Docling, you need to have Python and pip installed on your system. You can install Docling via pip:
+=== Why Use Docling for RAG?
 
-```
+**Benefits:**
+- **High Quality Extraction**: Advanced OCR and table extraction
+- **Structured Format**: Output ready for RAG ingestion
+- **Metadata Preservation**: Maintains document structure and metadata
+- **Enterprise Ready**: Handles complex enterprise documents
+
+== Installing Docling
+
+=== Python Installation
+
+[source,bash]
+----
+# Install Docling via pip
 pip install docling
-```
 
-Ensure you have the necessary OCR engines installed. For Tesseract, for instance, you can use:
+# Or with specific dependencies
+pip install docling[ocr]  # Includes OCR capabilities
+----
 
-```
+=== System Dependencies
+
+**For OCR functionality:**
+[source,bash]
+----
+# Ubuntu/Debian
 sudo apt-get install tesseract-ocr
-```
 
-=== 4.3. Ingesting PDFs with Docling
+# macOS
+brew install tesseract
 
-Docling provides a simple command-line interface to ingest PDFs. Here's a basic example:
+# RHEL/CentOS
+sudo yum install tesseract
+----
 
-```
-docling ingest --input /path/to/your/document.pdf --output /path/to/output/directory
-```
+== Basic Docling Usage
 
-This command will extract text from the PDF and save it in the specified output directory.
+=== Processing a Single Document
 
-=== 4.4. Chunking the Ingested Data
+[source,python]
+----
+from docling import DocumentConverter
 
-Once the data is ingested, it needs to be chunked for efficient processing by the RAG system. Docling allows you to split the ingested text into manageable chunks.
+# Initialize converter
+converter = DocumentConverter()
 
-```
-docling chunk --input /path/to/output/directory --output /path/to/chunked/directory --chunk-size 1000
-```
+# Process a PDF
+result = converter.convert("document.pdf")
 
-This command will split the ingested text into chunks of 1000 tokens each and save them in the specified chunked directory.
+# Access extracted content
+text = result.document.export_to_text()
+tables = result.document.export_to_tables()
+----
 
-=== 4.5. Hands-On Activity: Ingesting and Chunking PDFs
+=== Processing Multiple Documents
 
-1. Install Docling and the necessary OCR engines.
-2. Prepare a sample PDF for ingestion.
-3. Run the ingest command to extract text from the PDF
+[source,python]
+----
+from docling import DocumentConverter
+import os
+
+converter = DocumentConverter()
+
+# Process directory of PDFs
+input_dir = "/path/to/pdfs"
+output_dir = "/path/to/output"
+
+for filename in os.listdir(input_dir):
+    if filename.endswith(".pdf"):
+        input_path = os.path.join(input_dir, filename)
+        result = converter.convert(input_path)
+        
+        # Save processed document
+        output_path = os.path.join(output_dir, f"{filename}.json")
+        result.document.export_to_json(output_path)
+----
+
+== Document Processing Configuration
+
+=== RAG-Specific Configuration
+
+For RAG (Retrieval-Augmented Generation) document processing, Docling provides specific configuration options that can be set during document upload in the Generative AI Playground or programmatically:
+
+==== Maximum Chunk Length
+
+**Setting**: Maximum chunk length (word count)
+
+**Purpose**: Sets the maximum word count for each text section ("chunk") created from uploaded files.
+
+**Configuration:**
+[source,python]
+----
+# Example: Configure chunk length (in words, not tokens)
+chunk_length = 512  # words per chunk
+----
+
+**Best Practices:**
+- Typical range: 200-1000 words
+- Balance between context preservation and retrieval precision
+- Consider your embedding model's context window
+
+==== Chunk Overlap
+
+**Setting**: Chunk overlap (word count)
+
+**Purpose**: Determines the number of words from the end of one chunk that are repeated at the start of the next chunk, helping maintain continuous context.
+
+**Configuration:**
+[source,python]
+----
+# Example: Configure chunk overlap
+chunk_overlap = 50  # words to overlap between chunks
+----
+
+**Best Practices:**
+- Typical range: 10-20% of chunk length
+- Prevents information loss at chunk boundaries
+- Improves context continuity for retrieval
+
+==== Delimiter
+
+**Setting**: Delimiter character or string
+
+**Purpose**: Specifies a character or string that marks where a text chunk should end, ensuring boundaries align logically (e.g., separating by period or newline).
+
+**Configuration:**
+[source,python]
+----
+# Example: Configure delimiter
+delimiter = "\n\n"  # Split on double newline (paragraphs)
+# Or:
+delimiter = "."  # Split on periods (sentences)
+# Or:
+delimiter = None  # Use default semantic chunking
+----
+
+**Options:**
+- `"\n\n"`: Paragraph boundaries
+- `"."`: Sentence boundaries
+- `None`: Semantic chunking (default)
+
+=== OCR Configuration
+
+[source,python]
+----
+from docling import DocumentConverter
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+
+# Configure OCR
+pipeline_options = PdfPipelineOptions()
+pipeline_options.do_ocr = True
+pipeline_options.do_table_structure = True
+pipeline_options.table_structure_options.do_cell_matching = True
+
+converter = DocumentConverter(pipeline_options=pipeline_options)
+----
+
+=== Table Extraction
+
+[source,python]
+----
+from docling import DocumentConverter
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+
+# Enable table extraction
+pipeline_options = PdfPipelineOptions()
+pipeline_options.do_table_structure = True
+pipeline_options.table_structure_options.format = "markdown"  # or "html", "csv"
+
+converter = DocumentConverter(pipeline_options=pipeline_options)
+result = converter.convert("document.pdf")
+
+# Export tables
+tables = result.document.export_to_tables()
+----
+
+=== Complete RAG Configuration Example
+
+[source,python]
+----
+from docling import DocumentConverter
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+# Configure Docling for RAG
+pipeline_options = PdfPipelineOptions()
+pipeline_options.do_ocr = True
+pipeline_options.do_table_structure = True
+
+converter = DocumentConverter(pipeline_options=pipeline_options)
+result = converter.convert("document.pdf")
+text = result.document.export_to_text()
+
+# Configure chunking for RAG
+# Note: Docling uses word count, but we convert to tokens for consistency
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=512,      # Approximate tokens (converted from words)
+    chunk_overlap=50,    # Overlap in tokens
+    length_function=len,
+    separators=["\n\n", "\n", ". ", " ", ""]  # Delimiters
+)
+
+chunks = text_splitter.split_text(text)
+----
+
+== Chunking Documents for RAG
+
+=== Basic Chunking
+
+After processing documents with Docling, you need to chunk them for RAG:
+
+[source,python]
+----
+from docling import DocumentConverter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+# Process document
+converter = DocumentConverter()
+result = converter.convert("document.pdf")
+text = result.document.export_to_text()
+
+# Chunk the text
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=512,      # Tokens per chunk
+    chunk_overlap=50,    # Overlap between chunks
+    length_function=len,
+)
+
+chunks = text_splitter.split_text(text)
+----
+
+=== Semantic Chunking
+
+For better RAG performance, use semantic chunking:
+
+[source,python]
+----
+from langchain.text_splitter import SemanticChunker
+from langchain.embeddings import HuggingFaceEmbeddings
+
+# Initialize embeddings for semantic chunking
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
+
+# Create semantic chunker
+chunker = SemanticChunker(
+    embeddings=embeddings,
+    chunk_size=512,
+    chunk_overlap=50
+)
+
+# Chunk document
+chunks = chunker.create_documents([text])
+----
+
+=== Preserving Metadata
+
+[source,python]
+----
+from docling import DocumentConverter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+converter = DocumentConverter()
+result = converter.convert("document.pdf")
+
+# Extract metadata
+metadata = {
+    "title": result.document.export_meta().get("title", ""),
+    "author": result.document.export_meta().get("author", ""),
+    "source": "document.pdf"
+}
+
+# Chunk with metadata
+text = result.document.export_to_text()
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=512,
+    chunk_overlap=50
+)
+
+chunks = text_splitter.create_documents(
+    [text],
+    metadatas=[metadata] * len(text_splitter.split_text(text))
+)
+----
+
+== Integration with Llama Stack
+
+=== Preparing Documents for Ingestion
+
+[source,python]
+----
+from docling import DocumentConverter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+import json
+
+# Process document
+converter = DocumentConverter()
+result = converter.convert("document.pdf")
+text = result.document.export_to_text()
+metadata = result.document.export_meta()
+
+# Chunk document
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=512,
+    chunk_overlap=50
+)
+chunks = text_splitter.split_text(text)
+
+# Prepare for Llama Stack ingestion
+documents = []
+for i, chunk in enumerate(chunks):
+    documents.append({
+        "id": f"doc1_chunk{i}",
+        "text": chunk,
+        "metadata": {
+            "title": metadata.get("title", ""),
+            "source": "document.pdf",
+            "chunk_index": i
+        }
+    })
+
+# Save for ingestion
+with open("docling-output.json", "w") as f:
+    json.dump({"documents": documents}, f)
+----
+
+=== Ingesting to Llama Stack
+
+[source,bash]
+----
+# Ingest processed documents to Llama Stack
+curl -X POST $LLAMA_STACK_URL/ingest \
+  -H "Content-Type: application/json" \
+  -d @docling-output.json
+----
+
+== Kubernetes Job for Document Processing
+
+=== Docling Job Configuration
+
+[source,yaml]
+----
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: docling-processing
+  namespace: lean-rag-accelerator
+spec:
+  template:
+    spec:
+      containers:
+      - name: docling
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install docling langchain
+            python process_documents.py
+        volumeMounts:
+        - name: input-docs
+          mountPath: /input
+        - name: output-docs
+          mountPath: /output
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+      volumes:
+      - name: input-docs
+        persistentVolumeClaim:
+          claimName: input-documents-pvc
+      - name: output-docs
+        persistentVolumeClaim:
+          claimName: processed-documents-pvc
+      restartPolicy: Never
+  backoffLimit: 3
+----
+
+== Best Practices
+
+=== Document Processing
+
+- **Use OCR for Scanned Documents**: Enable OCR for PDFs with images
+- **Extract Tables**: Preserve table structure for better context
+- **Preserve Metadata**: Maintain document metadata for filtering
+- **Handle Errors**: Implement error handling for corrupted documents
+
+=== Chunking Strategy
+
+- **Chunk Size**: 512 tokens is a good starting point
+- **Overlap**: 50 tokens overlap helps maintain context
+- **Semantic Chunking**: Use semantic chunking for better retrieval
+- **Metadata**: Include source, title, chunk index in metadata
+
+=== Performance
+
+- **Batch Processing**: Process multiple documents in parallel
+- **Caching**: Cache processed documents to avoid reprocessing
+- **Resource Allocation**: Allocate sufficient memory for large documents
+
+== Troubleshooting
+
+=== OCR Issues
+
+**Problem**: Poor OCR quality
+
+**Solutions:**
+- Ensure Tesseract is properly installed
+- Use higher resolution source documents
+- Adjust OCR language settings
+- Pre-process images (contrast, noise reduction)
+
+=== Memory Issues
+
+**Problem**: Out of memory when processing large documents
+
+**Solutions:**
+- Process documents in smaller batches
+- Increase container memory limits
+- Use streaming processing for very large documents
+
+=== Format Issues
+
+**Problem**: Unsupported document format
+
+**Solutions:**
+- Convert documents to PDF first
+- Check Docling version supports the format
+- Use alternative processing tools for unsupported formats
+
+== Key Takeaways
+
+- Docling is a Python library for enterprise document processing
+- Supports PDF, images, audio with OCR capabilities
+- Outputs structured formats ready for RAG ingestion
+- Integrates with Llama Stack for document ingestion
+- Chunking is required after processing for RAG systems
+- Preserve metadata for better retrieval and filtering
+
+== Next Steps
+
+- Learn about orchestrating RAG workflows with Llama Stack API
+- Explore vector database integration options
+- Understand RAG evaluation with RAGAS
+
+[NOTE]
+====
+**Documentation Gaps**: This section would benefit from:
+- Complete Docling API reference
+- Advanced configuration examples
+- Performance optimization guide
+- Integration patterns with various RAG systems
+- Real-world document processing examples
+====

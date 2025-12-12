@@ -1,18 +1,108 @@
-#  Module 2: Model Optimization with LLM Compressor
+= Module 2: Model Optimization with LLM Compressor
 
-```
-Module 2: Model Optimization with LLM Compressor
-==================================================
+== Introduction
 
-This module focuses on optimizing models using the LLM Compressor. Key topics include:
+This module covers how to optimize LLM models using RHOAI 3.0's LLM Compressor to reduce memory footprint by 50-75% while maintaining >95% accuracy. You'll learn quantization techniques, how to use LLM Compressor, and how to access pre-optimized models from the Red Hat Model Catalog.
 
-- Techniques for model compression:
-  - Quantization (FP8, INT8) to reduce model precision and size
-  - Sparsity to eliminate less important weights
+**Key Learning Objectives:**
+- Understand quantization techniques (FP8, INT8, INT4) and trade-offs
+- Use LLM Compressor to create optimized models
+- Implement SmoothQuant and GPTQ quantization recipes
+- Access pre-optimized models from Red Hat Model Catalog
 
-- Utilizing LLM Compressor to generate optimized "ModelCars" (containerized models) for efficient deployment.
+== Module Overview
 
-- Implementing quantization recipes such as SmoothQuant and GPTQ to minimize GPU memory usage.
+Model optimization is the first step in the Lean RAG Accelerator workflow. By reducing model size through quantization, you can:
+- Serve models on smaller/cheaper GPUs
+- Increase throughput (more concurrent requests)
+- Reduce infrastructure costs by 50%+
+- Maintain >95% accuracy in most cases
 
-- Accessing pre-optimized, validated models from the Red Hat Model Catalog, like Lean Llama, to accelerate development.
-```
+=== The Optimization Process
+
+1. **Choose Quantization Method**: Select FP8, INT8, or INT4 based on requirements
+2. **Configure Recipe**: Define QuantizationRecipe with model source and parameters
+3. **Run Optimization**: Execute quantization job (30-60 minutes)
+4. **Deploy Optimized Model**: Use optimized model in inference serving
+
+== Topics Covered
+
+=== Section 2.1: Model Compression Techniques
+
+Learn about quantization and sparsity techniques:
+- Quantization fundamentals (FP32 → INT4)
+- FP8, INT8, INT4 comparison
+- SmoothQuant and GPTQ algorithms
+- Sparsity techniques
+- Decision framework
+
+**Duration**: 60-75 minutes
+
+=== Section 2.2: Using LLM Compressor
+
+Hands-on guide to using RHOAI 3.0's LLM Compressor:
+- QuantizationRecipe CRD structure
+- Step-by-step configuration
+- Deployment and monitoring
+- Troubleshooting
+
+**Duration**: 75-90 minutes
+
+=== Section 2.3: Implementing Quantization Recipes
+
+Practical implementation of quantization:
+- SmoothQuant configuration
+- GPTQ configuration
+- Advanced parameters
+- Best practices
+
+**Duration**: 90-120 minutes
+
+=== Section 2.4: Red Hat Model Catalog
+
+Access pre-optimized models:
+- Model Catalog overview
+- Access methods (Hugging Face, OCI, ModelCars)
+- Model selection guide
+- Using catalog models
+
+**Duration**: 45-60 minutes
+
+== Prerequisites
+
+Before starting this module, ensure you have:
+- Completed Module 1 (understanding inference economics)
+- Red Hat OpenShift AI 3.0 installed
+- Access to GPU resources for quantization
+- Basic Kubernetes knowledge
+
+== Expected Outcomes
+
+By the end of this module, you will be able to:
+- Choose appropriate quantization methods
+- Create and deploy QuantizationRecipe
+- Monitor quantization jobs
+- Access and use models from Model Catalog
+- Validate quantization results
+
+== Module Structure
+
+This module follows a hands-on approach:
+
+1. **Concept Learning**: Understand quantization techniques
+2. **Tool Usage**: Learn LLM Compressor
+3. **Implementation**: Create quantization recipes
+4. **Catalog Access**: Use pre-optimized models
+
+== Next Steps
+
+After completing this module:
+- Proceed to Module 3 to learn about high-performance serving
+- Deploy your optimized model using vLLM
+- Compare performance before and after optimization
+
+== Related Resources
+
+- link:module-1-inference-economics-rhoai-30-architecture.adoc[Module 1: Inference Economics] - Previous module
+- link:module-3-high-performance-serving-with-vllm-llm-d.adoc[Module 3: High-Performance Serving] - Next module
+- link:../../lean-rag-accelerator/examples/01-model-optimization/README.md[Model Optimization Examples] - Quickstart code

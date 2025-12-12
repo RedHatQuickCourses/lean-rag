@@ -1,39 +1,269 @@
-#  Accessing validated, pre-optimized models (e.g., Lean Llama) from the Red Hat Model Catalog
+= Accessing Validated, Pre-optimized Models from the Red Hat Model Catalog
 
-== Accessing Validated, Pre-optimized Models from the Red Hat Model Catalog
+== Introduction
 
-In this section, we will explore how to access validated, pre-optimized models from the Red Hat Model Catalog, specifically focusing on the Lean Llama model. These pre-optimized models are crucial for reducing GPU memory footprint and accelerating inference times.
+The Red Hat Model Catalog provides validated, pre-optimized models for use with Red Hat AI Inference Server (RHAIIS) and RHOAI 3.0. These models are available in multiple formats and quantization variants (INT4, INT8, FP8), making it easy to deploy optimized models without custom quantization.
 
-### 1. Introduction to Red Hat Model Catalog
+**Key Benefits:**
+- Pre-validated models tested with RHOAI 3.0
+- Multiple quantization variants available
+- OCI container images for easy deployment
+- ModelCar images for OpenShift AI
+- Hugging Face access for development
 
-The Red Hat Model Catalog is a centralized repository for pre-trained, optimized machine learning models. It simplifies the process of model deployment and management by providing a collection of models that have been thoroughly tested and optimized for performance.
+== Model Catalog Access Methods
 
-### 2. Accessing Lean Llama Model
+=== Method 1: Hugging Face
 
-Lean Llama is a pre-optimized model available in the Red Hat Model Catalog, designed for efficient inference. To access this model, follow these steps:
+Models validated for use with Red Hat AI Inference Server are available from the **RedHat AI on Hugging Face** collection.
 
-#### 2.1. Navigate to the Red Hat Model Catalog
+**Access:**
+- Collection: `RedHatAI` on Hugging Face
+- Format: Standard Hugging Face model format
+- Use case: Development and testing
 
-Visit the Red Hat Model Catalog at [https://model-catalog.rh-ai.com](https://model-catalog.rh-ai.com).
+**Example:**
+[source,yaml]
+----
+spec:
+  model:
+    source: hf://RedHatAI/Qwen3-8B-FP8-dynamic
+----
 
-#### 2.2. Search for Lean Llama
+=== Method 2: OCI Artifacts (RHEL AI)
 
-Use the search bar or browse through the available models to find "Lean Llama". Click on the model to view its details.
+For RHEL AI deployments, use OCI artifact images from the `registry.redhat.io/rhelai1/` namespace.
 
-#### 2.3. Download the Model
+**Registry**: `registry.redhat.io/rhelai1/`
 
-The Red Hat Model Catalog provides containerized models, making it easy to deploy them in various environments. Click on the "Download" button to get the Lean Llama model in a container format (e.g., Docker image).
+**Example Models:**
 
-### 3. Using LLM Compressor with Lean Llama
+[source,yaml]
+----
+# Baseline Llama-3-1-8B-Instruct
+spec:
+  model:
+    source: oci://registry.redhat.io/rhelai1/llama-3-1-8b-instruct:1.5
 
-To further optimize the Lean Llama model for inference, you can use the LLM Compressor tool. This tool allows you to create optimized "ModelCars" (containerized models) with techniques like quantization and sparsity.
+# INT4 Llama-4-Scout-17B (quantized)
+spec:
+  model:
+    source: oci://registry.redhat.io/rhelai1/llama-4-scout-17b-16e-instruct-quantized-w4a16:1.5
+----
 
-#### 3.1. Quantization Recipes
+=== Method 3: ModelCar Images (OpenShift AI)
 
-Quantization recipes, such as SmoothQuant and GPTQ, can be applied to reduce the GPU memory footprint. These recipes are available within the LLM Compressor tool.
+For OpenShift AI deployments, use ModelCar images from the `registry.redhat.io/rhelai1/modelcar-` namespace.
 
-#### 3.2. Implementing Quantization
+**Registry**: `registry.redhat.io/rhelai1/modelcar-*`
 
-Follow these steps to implement quantization using LLM Compressor:
+**Example Models:**
 
-1. Install LLM Compressor: Follow the installation instructions provided in the [LLM Compressor documentation](https://llm-compressor.readthedocs.io/
+[source,yaml]
+----
+# Baseline granite-3-1-8b-instruct
+spec:
+  model:
+    source: oci://registry.redhat.io/rhelai1/modelcar-granite-3-1-8b-instruct:1.5
+
+# FP8 Mistral-Small-3-1-24B-Instruct-2503
+spec:
+  model:
+    source: oci://registry.redhat.io/rhelai1/modelcar-mistral-small-3-1-24b-instruct-2503-fp8-dynamic:1.5
+----
+
+[NOTE]
+====
+**ModelCars**: ModelCar images are OCI container images containing pre-packaged models. They reduce startup times and disk usage by allowing pre-fetched images. ModelCars are optimized for OpenShift AI deployments.
+====
+
+== Available Model Variants
+
+=== Quantization Variants
+
+Models in the catalog are available in multiple quantization variants:
+
+| Variant | Description | Use Case |
+|---------|-------------|----------|
+| **Baseline** | Full precision (FP16/FP32) | Maximum accuracy |
+| **INT4** | 4-bit integer quantization | Maximum compression |
+| **INT8** | 8-bit integer quantization | Balanced performance |
+| **FP8** | 8-bit floating point | Best accuracy retention |
+
+=== Example Model Catalog
+
+**Baseline Models:**
+- `llama-3-1-8b-instruct:1.5` (OCI artifact)
+- `modelcar-granite-3-1-8b-instruct:1.5` (ModelCar)
+
+**Quantized Models:**
+- `llama-4-scout-17b-16e-instruct-quantized-w4a16:1.5` (INT4, OCI artifact)
+- `modelcar-mistral-small-3-1-24b-instruct-2503-fp8-dynamic:1.5` (FP8, ModelCar)
+
+== Using Models from Catalog
+
+=== In LLMInferenceService
+
+[source,yaml]
+----
+apiVersion: llama.redhat.com/v1alpha1
+kind: LLMInferenceService
+metadata:
+  name: lean-rag-inference
+spec:
+  model:
+    # Option 1: Hugging Face
+    source: hf://RedHatAI/Qwen3-8B-FP8-dynamic
+    
+    # Option 2: OCI Artifact (RHEL AI)
+    # source: oci://registry.redhat.io/rhelai1/llama-3-1-8b-instruct:1.5
+    
+    # Option 3: ModelCar (OpenShift AI)
+    # source: oci://registry.redhat.io/rhelai1/modelcar-granite-3-1-8b-instruct:1.5
+    
+    name: RedHatAI/Qwen3-8B-FP8-dynamic
+----
+
+=== In QuantizationRecipe (for custom optimization)
+
+If you want to further optimize a catalog model, you can reference it in a QuantizationRecipe:
+
+[source,yaml]
+----
+apiVersion: ai.redhat.com/v1alpha1
+kind: QuantizationRecipe
+metadata:
+  name: optimize-catalog-model
+spec:
+  model:
+    source:
+      # Reference catalog model
+      uri: oci://registry.redhat.io/rhelai1/llama-3-1-8b-instruct:1.5
+  quantization:
+    method: smoothquant
+    targetPrecision: int8
+  # ... rest of configuration
+----
+
+== Model Selection Guide
+
+=== Choose Baseline When:
+
+- Maximum accuracy is required
+- You have sufficient GPU memory
+- You can accept higher costs
+- Use case: Research, high-stakes applications
+
+=== Choose INT8 When:
+
+- Good balance of accuracy and efficiency
+- Standard production deployments
+- 50% memory reduction needed
+- Use case: Most production RAG systems
+
+=== Choose INT4 When:
+
+- Maximum compression needed
+- Resource-constrained environments
+- Can accept ~90% accuracy retention
+- Use case: Edge deployments, cost-sensitive
+
+=== Choose FP8 When:
+
+- Best accuracy retention among 8-bit formats
+- Modern GPU hardware available
+- Production deployments
+- Use case: New deployments, future-proof
+
+== Best Practices
+
+=== Model Versioning
+
+- Always specify version tags (e.g., `:1.5`)
+- Pin versions for production deployments
+- Test new versions before upgrading
+
+=== Registry Authentication
+
+**For Red Hat Registry:**
+[source,bash]
+----
+# Login to Red Hat Registry
+podman login registry.redhat.io
+# Or
+docker login registry.redhat.io
+----
+
+**Credentials:**
+- Use Red Hat account credentials
+- Or service account with registry access
+
+=== Model Caching
+
+**ModelCars** provide built-in caching:
+- Pre-fetched images reduce startup time
+- Shared layers reduce disk usage
+- Faster pod startup in Kubernetes
+
+=== Performance Considerations
+
+- **ModelCar images**: Faster startup, less disk usage
+- **OCI artifacts**: Standard format, more flexible
+- **Hugging Face**: Easy development, may be slower for production
+
+== Troubleshooting
+
+=== Registry Access Issues
+
+**Problem**: Cannot pull model from registry
+
+**Solutions:**
+- Verify registry authentication
+- Check network connectivity
+- Verify model name and version exist
+- Check registry credentials in Kubernetes secrets
+
+=== Model Not Found
+
+**Problem**: Model URI not recognized
+
+**Solutions:**
+- Verify exact model name and version
+- Check registry namespace (`rhelai1/` for OCI, `rhelai1/modelcar-` for ModelCars)
+- Verify model exists in catalog
+- Check URI format (oci://, hf://)
+
+=== Version Mismatch
+
+**Problem**: Model version incompatible
+
+**Solutions:**
+- Check RHOAI 3.0 compatibility
+- Verify model version supports your use case
+- Review model documentation
+- Test with different versions
+
+== Key Takeaways
+
+- Red Hat Model Catalog provides validated, pre-optimized models
+- Three access methods: Hugging Face, OCI artifacts, ModelCars
+- Multiple quantization variants available (INT4, INT8, FP8, Baseline)
+- ModelCars optimize for OpenShift AI deployments
+- Always specify version tags for reproducibility
+- Choose model variant based on accuracy/efficiency trade-offs
+
+== Next Steps
+
+- Learn about custom model optimization with LLM Compressor
+- Understand how to deploy models using ModelCars
+- Explore quantization recipes for further optimization
+
+[NOTE]
+====
+**Documentation Gaps**: This section would benefit from:
+- Complete list of available models in catalog
+- Model compatibility matrix
+- Performance benchmarks for catalog models
+- Model metadata and specifications
+- Catalog browsing interface screenshots
+====

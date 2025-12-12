@@ -1,30 +1,649 @@
-#  Orchestrating RAG workflows using the Llama Stack API for standardized "Response Generation" and "Vector IO"
-
-```
 = Orchestrating RAG Workflows with the Llama Stack API
 
-== Objective: Standardized RAG Implementation
+== Introduction
 
-In this module, we will focus on orchestrating Retrieval-Augmented Generation (RAG) workflows using the Llama Stack API. This approach ensures standardized "Response Generation" and "Vector IO," which are crucial for maintaining consistency and efficiency in your RAG systems.
+The **Llama Stack Operator** in RHOAI 3.0 provides a unified, standardized approach to RAG workflows. This section covers how to orchestrate RAG workflows using the **LLMInferenceService** Custom Resource, which integrates LLM inference, semantic retrieval, and vector database operations.
 
-=== 4.1 Ingesting and Chunking Unstructured Enterprise Data
+== Understanding Llama Stack Architecture
 
-To begin with, we need to ingest and chunk unstructured enterprise data, such as PDFs, using Docling. This process transforms the raw data into a structured format that can be easily processed by the Llama Stack API.
+=== Llama Stack Components
 
-=== 4.2 Orchestrating RAG Workflows with the Llama Stack API
+The Llama Stack integrates three key capabilities:
 
-The Llama Stack API provides a set of tools and services to manage and orchestrate RAG workflows. By leveraging this API, we can standardize the "Response Generation" and "Vector IO" processes, ensuring that our RAG systems are consistent, maintainable, and scalable.
+1. **LLM Inference**: High-performance model serving (vLLM/llm-d)
+2. **Semantic Retrieval**: Vector search and retrieval operations
+3. **Vector Database**: Embedded or external vector storage
 
-Here's a high-level overview of how to use the Llama Stack API for orchestrating RAG workflows:
+=== LLMInferenceService Custom Resource
 
-1. **Initialize the Llama Stack API client**: Establish a connection to the Llama Stack API using the provided client library for your preferred programming language.
+The **LLMInferenceService** CR is the primary interface for deploying RAG systems with Llama Stack. It replaces the need for separate inference services, vector stores, and orchestration components.
 
-2. **Define the RAG workflow**: Specify the sequence of steps in your RAG workflow, including data retrieval, model inference, and response generation. The Llama Stack API supports a modular design, allowing you to easily customize and extend your workflows.
+**Key Features:**
+- Unified configuration for RAG workflows
+- Embedded vector store support
+- Standardized API endpoints
+- Integration with RHOAI 3.0 infrastructure
 
-3. **Implement "Response Generation"**: Utilize the Llama Stack API's built-in functions for generating responses based on the retrieved data and model inferences. This step ensures that your RAG system produces consistent and accurate responses.
+== Deploying RAG with LLMInferenceService
 
-4. **Handle "Vector IO"**: The Llama Stack API simplifies the process of converting text data into vector representations and vice versa. By using the API's vector IO functions, you can seamlessly integrate your RAG system with various vector databases and models.
+=== Basic LLMInferenceService Configuration
 
-=== 4.3 Integrating Vector Databases
+The `LLMInferenceService` CRD structure includes the following key fields:
 
-To store and retrieve vector representations of your data, you can integrate vector databases like Milvus or Chroma using Llama Stack providers. This integration enables efficient similarity search and retrieval of relevant data for your
+[source,yaml]
+----
+apiVersion: llama.redhat.com/v1alpha1  # Verify exact API version
+kind: LLMInferenceService
+metadata:
+  name: lean-rag-inference  # Unique name for the inference service
+  namespace: lean-rag-accelerator
+spec:
+  replicas: 1  # Desired number of replicas
+  
+  # Model Configuration
+  model:
+    # Model URI - supports multiple formats:
+    # - HuggingFace: hf://model-name/optional-hash
+    # - S3: s3://bucket-name/object-key
+    # - OCI Container: oci://registry/model:tag
+    uri: hf://meta-llama/Llama-3.1-8B-Instruct
+    # Or use ModelCar from Red Hat Catalog:
+    # uri: oci://registry.redhat.io/rhelai1/modelcar-granite-3-1-8b-instruct:1.5
+    
+    # Model name used in chat completion requests
+    name: llama-3.1-8b
+  
+  # Resource Configuration
+  template:
+    containers:
+    - name: main
+      resources:
+        requests:
+          cpu: "2"
+          memory: 16Gi
+          nvidia.com/gpu: "1"
+        limits:
+          cpu: "4"
+          memory: 32Gi
+          nvidia.com/gpu: "1"
+  
+  # Vector Store Configuration (Embedded for Lean RAG)
+  vectorStore:
+    provider: inline-faiss  # Options: inline-faiss, inline-milvus-lite, milvus, chroma
+    config:
+      collectionName: lean-rag-documents
+      embeddingModel: hf://sentence-transformers/all-MiniLM-L6-v2
+      dimension: 384  # Dimension for all-MiniLM-L6-v2
+  
+  # RAG Workflow Configuration
+  rag:
+    retrieval:
+      strategy: semantic_search
+      topK: 5
+      scoreThreshold: 0.7
+    generation:
+      temperature: 0.7
+      maxTokens: 512
+      topP: 0.9
+----
+
+[NOTE]
+====
+**CRD Structure**: The exact LLMInferenceService CRD schema may vary. The structure above is based on the llm-d LLMInferenceService pattern. Verify the exact schema for Llama Stack's LLMInferenceService in RHOAI 3.0 documentation.
+====
+
+[NOTE]
+====
+**Documentation Gap**: Need to verify:
+- Exact API version for LLMInferenceService CR
+- Available provider options for vectorStore
+- Configuration schema details
+- Model source URI formats
+====
+
+=== Model Source Options
+
+**1. HuggingFace URI:**
+[source,yaml]
+----
+spec:
+  model:
+    source: hf://meta-llama/Llama-3.1-8B-Instruct
+    # Optional: specify hash for versioning
+    # source: hf://meta-llama/Llama-3.1-8B-Instruct/abc123def456
+----
+
+**2. S3 URI:**
+[source,yaml]
+----
+spec:
+  model:
+    source: s3://my-model-bucket/models/llama-3.1-8b-int8
+    # S3 credentials configured via Secret
+----
+
+**3. OCI Container (ModelCar):**
+[source,yaml]
+----
+spec:
+  model:
+    source: oci://registry.example.com/models/llama-3.1-8b-int8:v1.0
+    # ModelCar images reduce startup time and disk usage
+----
+
+[NOTE]
+====
+**ModelCars**: OCI container images containing pre-packaged models. In KServe, deploying from OCI containers is known as "modelcars". This method:
+- Reduces startup times (pre-fetched images)
+- Reduces disk usage
+- Enables versioning and sharing
+- RHEL AI uses OCI artifact images
+- OpenShift AI may use ModelCar images
+====
+
+=== Embedded Vector Store Configuration
+
+**For "Lean RAG" deployments, use embedded vector stores:**
+
+==== Inline FAISS (Technology Preview)
+
+[source,yaml]
+----
+spec:
+  vectorStore:
+    provider: inline-faiss
+    config:
+      collectionName: lean-rag-documents
+      embeddingModel: hf://sentence-transformers/all-MiniLM-L6-v2
+      dimension: 384
+      # Uses embedded SQLite backend
+      # No external database service required
+----
+
+**Advantages:**
+- No external dependencies
+- Lightweight and fast
+- Perfect for development and rapid iteration
+- Suitable for disconnected environments
+- Single-node deployments
+
+**Limitations:**
+- Technology Preview (may have limitations)
+- Best for small to medium datasets
+- Not suitable for high-scale production (use external Milvus)
+
+==== Inline Milvus Lite
+
+[source,yaml]
+----
+spec:
+  vectorStore:
+    provider: inline-milvus-lite
+    config:
+      collectionName: lean-rag-documents
+      embeddingModel: hf://sentence-transformers/all-MiniLM-L6-v2
+      dimension: 384
+      # Runs embedded within LlamaStackDistribution pod
+      # Uses local SQLite database
+----
+
+**Advantages:**
+- Embedded within the pod
+- Local SQLite backend
+- Good for lightweight experimentation
+- Small-scale development
+
+**When to Use:**
+- Development and testing
+- Rapid prototyping
+- Small datasets (<100K documents)
+- Single-node deployments
+
+=== External Vector Store Configuration
+
+**For production deployments, use external vector stores:**
+
+[source,yaml]
+----
+spec:
+  vectorStore:
+    provider: milvus  # or chroma
+    config:
+      collectionName: lean-rag-documents
+      connection:
+        host: milvus-service.lean-rag-accelerator.svc.cluster.local
+        port: 19530
+      embeddingModel: hf://sentence-transformers/all-MiniLM-L6-v2
+      dimension: 384
+----
+
+== RAG Workflow Configuration
+
+=== Retrieval Configuration
+
+[source,yaml]
+----
+spec:
+  rag:
+    retrieval:
+      strategy: semantic_search  # Options: semantic_search, hybrid, keyword
+      topK: 5  # Number of documents to retrieve
+      rerank: false  # Enable reranking (optional)
+      scoreThreshold: 0.7  # Minimum similarity score
+----
+
+=== Response Generation Configuration
+
+[source,yaml]
+----
+spec:
+  rag:
+    generation:
+      temperature: 0.7  # Creativity (0.0-1.0)
+      maxTokens: 512  # Maximum response length
+      topP: 0.9  # Nucleus sampling
+      topK: 40  # Top-k sampling
+      stopSequences: []  # Stop generation on these sequences
+----
+
+== Complete Example: Lean RAG Deployment
+
+[source,yaml]
+----
+apiVersion: llama.redhat.com/v1alpha1
+kind: LLMInferenceService
+metadata:
+  name: lean-rag-inference
+  namespace: lean-rag-accelerator
+spec:
+  # Use quantized model from Module 2
+  model:
+    source: pvc://model-storage-pvc/models/llama-3.1-8b-int8
+    # Or use ModelCar:
+    # source: oci://registry.example.com/models/llama-3.1-8b-int8:v1.0
+  
+  # Embedded vector store for Lean RAG
+  vectorStore:
+    provider: inline-faiss
+    config:
+      collectionName: lean-rag-documents
+      embeddingModel: hf://sentence-transformers/all-MiniLM-L6-v2
+      dimension: 384
+  
+  # Inference configuration
+  inference:
+    runtime: vllm
+    resources:
+      limits:
+        nvidia.com/gpu: 1
+      requests:
+        nvidia.com/gpu: 1
+  
+  # RAG workflow
+  rag:
+    retrieval:
+      strategy: semantic_search
+      topK: 5
+      scoreThreshold: 0.7
+    generation:
+      temperature: 0.7
+      maxTokens: 512
+      topP: 0.9
+  
+  # API configuration
+  api:
+    port: 8080
+    endpoints:
+      - /query
+      - /ingest
+      - /health
+----
+
+== Deploying LLMInferenceService
+
+=== Step 1: Apply the Configuration
+
+[source,bash]
+----
+kubectl apply -f llm-inferenceservice.yaml
+----
+
+=== Step 2: Monitor Deployment
+
+[source,bash]
+----
+# Watch service status
+kubectl get llminferenceservice lean-rag-inference -w
+
+# Check pods
+kubectl get pods -l app=lean-rag-inference
+
+# Check LlamaStackDistribution
+kubectl get llamastackdistribution -n lean-rag-accelerator
+----
+
+=== Step 3: Verify Service
+
+[source,bash]
+----
+# Get service endpoint
+SERVICE_URL=$(kubectl get llminferenceservice lean-rag-inference -o jsonpath='{.status.url}')
+
+# Test health endpoint
+curl $SERVICE_URL/health
+
+# Test query endpoint
+curl -X POST $SERVICE_URL/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "What is the main topic?",
+    "top_k": 5
+  }'
+----
+
+== Standardized API Endpoints
+
+The Llama Stack provides comprehensive APIs, including internal APIs and OpenAI-compatible APIs, generally served through the distribution instance on **port 8321**.
+
+=== OpenAI-Compatible APIs
+
+==== Chat Completions (Technology Preview)
+
+**Endpoint**: `POST /v1/openai/v1/chat/completions`
+
+**Status**: Technology Preview
+
+**Request:**
+[source,json]
+----
+{
+  "model": "llama-3.1-8b",
+  "messages": [
+    {"role": "user", "content": "Your question here"}
+  ],
+  "temperature": 0.7,
+  "max_tokens": 512
+}
+----
+
+==== Text Completions (Technology Preview)
+
+**Endpoint**: `POST /v1/openai/v1/completions`
+
+**Status**: Technology Preview
+
+**Request:**
+[source,json]
+----
+{
+  "model": "llama-3.1-8b",
+  "prompt": "Your prompt here",
+  "temperature": 0.7,
+  "max_tokens": 512
+}
+----
+
+==== Embeddings (Supported)
+
+**Endpoint**: `POST /v1/openai/v1/embeddings`
+
+**Status**: Supported
+
+**Request:**
+[source,json]
+----
+{
+  "model": "granite-embedding-125m",
+  "input": "Text to embed"
+}
+----
+
+=== RAG and Vector Store APIs (Technology Preview)
+
+==== Files API
+
+**Endpoint**: `POST /v1/openai/v1/files`
+
+**Status**: Technology Preview
+
+**Purpose**: Upload and manage files for RAG
+
+==== Vector Stores API
+
+**Endpoint**: `POST /v1/openai/v1/vector_stores/`
+
+**Status**: Technology Preview
+
+**Purpose**: Create and manage vector stores
+
+==== Vector Store Files
+
+**Endpoint**: `POST /v1/openai/v1/vector_stores/{vector_store_id}/files`
+
+**Status**: Developer Preview
+
+**Purpose**: Add files to a vector store
+
+==== Responses API
+
+**Endpoint**: `POST /v1/openai/v1/responses`
+
+**Status**: Developer Preview (Experimental)
+
+**Purpose**: Generate RAG responses
+
+=== Llama Stack Core APIs
+
+==== Safety API (Technology Preview)
+
+**Endpoint**: `POST /v1/safety`
+
+**Status**: Technology Preview
+
+**Purpose**: Content safety and moderation
+
+==== Agents API (Developer Preview)
+
+**Endpoint**: `POST /v1alpha/agents`
+
+**Status**: Developer Preview
+
+**Purpose**: Agent orchestration
+
+==== Vector IO API (Developer Preview)
+
+**Endpoint**: `POST /v1/vector-io`
+
+**Status**: Developer Preview
+
+**Purpose**: Vector operations
+
+==== Evaluation API (Developer Preview)
+
+**Endpoint**: `POST /v1beta/eval`
+
+**Status**: Developer Preview
+
+**Purpose**: RAG evaluation (RAGAS integration)
+
+=== Model Metadata API
+
+==== Models List (Technology Preview)
+
+**Endpoint**: `GET /v1/openai/v1/models`
+
+**Status**: Technology Preview
+
+**Purpose**: List available models
+
+**Response:**
+[source,json]
+----
+{
+  "data": [
+    {
+      "id": "llama-3.1-8b",
+      "object": "model",
+      "created": 1234567890,
+      "owned_by": "redhat"
+    }
+  ]
+}
+----
+
+=== Complete API Reference
+
+| API Category | Endpoint | Support Status |
+|-------------|----------|----------------|
+| **OpenAI - Chat/Text** | `/v1/openai/v1/chat/completions` | Technology Preview |
+| | `/v1/openai/v1/completions` | Technology Preview |
+| | `/v1/openai/v1/embeddings` | Supported |
+| **OpenAI - RAG/Agents** | `/v1/openai/v1/files` | Technology Preview |
+| | `/v1/openai/v1/vector_stores/` | Technology Preview |
+| | `/v1/openai/v1/vector_stores/{vector_store_id}/files` | Developer Preview |
+| | `/v1/openai/v1/responses` | Developer Preview (Experimental) |
+| **Llama Stack Core** | `/v1/safety` | Technology Preview |
+| | `/v1alpha/agents` | Developer Preview |
+| | `/v1/vector-io` | Developer Preview |
+| | `/v1beta/eval` | Developer Preview |
+| **Model Metadata** | `/v1/openai/v1/models` | Technology Preview |
+
+[NOTE]
+====
+**Important**: Most Llama Stack APIs are in Technology Preview or Developer Preview. Only the Embeddings API (`/v1/openai/v1/embeddings`) is fully supported. Use Technology Preview and Developer Preview APIs with caution in production environments.
+====
+
+== Vector IO Operations
+
+The Llama Stack API provides standardized Vector IO operations:
+
+=== Adding Documents
+
+[source,bash]
+----
+curl -X POST $SERVICE_URL/ingest \
+  -H "Content-Type: application/json" \
+  -d '{
+    "documents": [
+      {
+        "id": "doc1",
+        "text": "Document content",
+        "metadata": {"title": "Example"}
+      }
+    ]
+  }'
+----
+
+=== Querying Documents
+
+[source,bash]
+----
+curl -X POST $SERVICE_URL/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Search query",
+    "top_k": 5
+  }'
+----
+
+=== Deleting Documents
+
+[source,bash]
+----
+curl -X DELETE $SERVICE_URL/documents/doc1
+----
+
+== Integration with Docling
+
+Docling-processed documents can be ingested directly:
+
+[source,bash]
+----
+# Process document with Docling (see Section 4.1)
+# Then ingest processed chunks
+curl -X POST $SERVICE_URL/ingest \
+  -H "Content-Type: application/json" \
+  -d @docling-output.json
+----
+
+== Best Practices
+
+=== Model Source Selection
+
+- **Development**: Use HuggingFace URIs for quick iteration
+- **Production**: Use ModelCars (OCI containers) for reliability
+- **Optimized Models**: Use quantized models from Module 2
+
+=== Vector Store Selection
+
+- **Lean RAG (Development)**: Use Inline FAISS or Inline Milvus Lite
+- **Production (Small Scale)**: Use Inline Milvus Lite
+- **Production (Large Scale)**: Use external Milvus
+
+=== Resource Allocation
+
+- **GPU**: 1 GPU for inference (A10G or equivalent)
+- **Memory**: 4-8GB for embedded vector stores
+- **CPU**: 2-4 cores for processing
+
+== Troubleshooting
+
+=== Service Not Ready
+
+**Symptoms:**
+- LLMInferenceService status shows "NotReady"
+- Pods not starting
+
+**Solutions:**
+- Check model source accessibility
+- Verify GPU resources available
+- Check vector store configuration
+- Review pod logs: `kubectl logs -l app=lean-rag-inference`
+
+=== Vector Store Errors
+
+**Symptoms:**
+- Embedding generation fails
+- Document ingestion fails
+
+**Solutions:**
+- Verify embedding model is accessible
+- Check vector store provider configuration
+- For embedded stores, check pod resources
+- Review vector store logs
+
+=== Inference Errors
+
+**Symptoms:**
+- Query endpoint returns errors
+- Generation fails
+
+**Solutions:**
+- Verify inference service (vLLM) is running
+- Check model is loaded correctly
+- Verify GPU availability
+- Review inference service logs
+
+== Key Takeaways
+
+- LLMInferenceService CR provides unified RAG deployment
+- Embedded vector stores (Inline FAISS, Inline Milvus Lite) enable "Lean RAG"
+- ModelCars (OCI containers) provide reliable model deployment
+- Standardized API endpoints simplify integration
+- Llama Stack integrates inference, retrieval, and vector storage
+
+== Next Steps
+
+- Learn about document ingestion with Docling (Section 4.1)
+- Explore embedded vector store configuration (Section 4.3)
+- Understand RAG evaluation with RAGAS (Section 4.4)
+
+[NOTE]
+====
+**Documentation Gaps**: This section would benefit from:
+- Exact LLMInferenceService CRD schema
+- Complete API reference documentation
+- ModelCar creation and publishing guide
+- Vector store provider comparison table
+- Integration examples with Docling
+====
