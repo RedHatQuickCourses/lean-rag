@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Module 4: Standardized RAG Implementation :: Lean RAG Accelerator QuickStart Training</title>
+    <link rel="prev" href="../module-3-high-performance-serving-with-vllm-llm-d/implementing-prefix-caching-to-reuse-key-value-kv-cache-for-rag-system-prompts.html">
+    <link rel="next" href="ingesting-and-chunking-unstructured-enterprise-data-pdfs-using-docling.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Lean RAG Accelerator QuickStart Training</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="lean-rag" data-version="1.0.0">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Lean RAG Accelerator QuickStart Training</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../module-1-inference-economics-rhoai-30-architecture/module-1-inference-economics-rhoai-30-architecture.html">Module 1: Inference Economics &amp; RHOAI 3.0 Architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-1-inference-economics-rhoai-30-architecture/analysis-of-the-impossible-trinity-in-llm-deployments-balancing-accuracy-latency-and-cost.html">Analysis of the "Impossible Trinity" in LLM Deployments: Balancing Accuracy, Latency, and Cost</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-1-inference-economics-rhoai-30-architecture/identifying-critical-gpu-underutilization-and-the-role-of-memory-management-in-inference-costs.html">Identifying "Critical GPU Underutilization" and the Role of Memory Management in Inference Costs</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-1-inference-economics-rhoai-30-architecture/overview-of-the-red-hat-ai-30-ai-factory-approach-for-industrialized-model-serving.html">Overview of the Red Hat OpenShift AI 3.0 "AI Factory" Approach for Industrialized Model Serving</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-1-inference-economics-rhoai-30-architecture/mapping-the-rhoai-30-inference-stack-vllm-llm-d-and-kserve-integration.html">Mapping the RHOAI 3.0 inference stack: vLLM, llm-d, and KServe integration</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../module-2-model-optimization-with-llm-compressor/module-2-model-optimization-with-llm-compressor.html">Module 2: Model Optimization with LLM Compressor</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-2-model-optimization-with-llm-compressor/techniques-for-model-compression-quantization-fp8-int8-and-sparsity.html">Techniques for Model Compression: Quantization (FP8, INT8) and Sparsity</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-2-model-optimization-with-llm-compressor/using-llm-compressor-to-create-optimized-modelcars-containerized-models.html">Using LLM Compressor to Create Optimized Models</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-2-model-optimization-with-llm-compressor/implementing-quantization-recipes-eg-smoothquant-gptq-to-reduce-gpu-memory-footprint.html">Implementing quantization recipes (e.g., SmoothQuant, GPTQ) to reduce GPU memory footprint</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-2-model-optimization-with-llm-compressor/accessing-validated-pre-optimized-models-eg-lean-llama-from-the-red-hat-model-catalog.html">Accessing Validated, Pre-optimized Models from the Red Hat Model Catalog</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/module-3-high-performance-serving-with-vllm-llm-d.html">Module 3: High-Performance Serving with vLLM &amp; llm-d</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/configuring-vllm-for-maximum-throughput-using-pagedattention-and-continuous-batching.html">Configuring vLLM for Maximum Throughput Using PagedAttention and Continuous Batching</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/tuning-vllm-engine-arguments---gpu-memory-utilization-and---max-num-seqs.html">tuning vLLM engine arguments: <code>--gpu-memory-utilization</code> and <code>--max-num-seqs</code></a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/deploying-distributed-inference-with-llm-d-to-separate-prefill-and-decode-phases-disaggregation.html">Deploying distributed inference with llm-d to separate prefill and decode phases (disaggregation)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/implementing-prefix-caching-to-reuse-key-value-kv-cache-for-rag-system-prompts.html">Implementing prefix caching to reuse Key-Value (KV) cache for RAG system prompts</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="module-4-standardized-rag-implementation.html">Module 4: Standardized RAG Implementation</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="ingesting-and-chunking-unstructured-enterprise-data-pdfs-using-docling.html">Ingesting and Chunking Unstructured Enterprise Data using Docling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="orchestrating-rag-workflows-using-the-llama-stack-api-for-standardized-response-generation-and-vector-io.html">Orchestrating RAG Workflows with the Llama Stack API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="integrating-vector-databases-eg-milvus-chroma-via-llama-stack-providers.html">Integrating Vector Databases via Llama Stack Providers</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="deploying-the-rag-application-stack-using-gitops-and-argocd-for-repeatability.html">deploying the RAG application stack using GitOps and ArgoCD for repeatability</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../module-5-validation-benchmarking/module-5-validation-benchmarking.html">Module 5: Validation &amp; Benchmarking</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-5-validation-benchmarking/defining-service-level-objectives-slos-for-time-to-first-token-ttft-and-inter-token-latency-itl.html">Defining Service Level Objectives (SLOs) for Time To First Token (TTFT) and Inter-Token Latency (ITL)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-5-validation-benchmarking/simulating-real-world-traffic-load-using-guidellm-to-validate-throughput-gains.html">Simulating real-world traffic load using GuideLLM to validate throughput gains</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-5-validation-benchmarking/comparing-performance-metrics-throughput-vs-latency.html">Comparing performance metrics (throughput vs. latency</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/appendix.html">Appendix</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Lean RAG Accelerator QuickStart Training</span>
+    <span class="version">1.0.0</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Lean RAG Accelerator QuickStart Training</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1.0.0</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Lean RAG Accelerator QuickStart Training</a></li>
+    <li><a href="module-4-standardized-rag-implementation.html">Module 4: Standardized RAG Implementation</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Module 4: Standardized RAG Implementation</h1>
+<div class="sect1">
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This module focuses on implementing a standardized Retrieval-Augmented Generation (RAG) system using Red Hat OpenShift AI 3.0&#8217;s <strong>Llama Stack Operator</strong>. The Llama Stack integrates LLM inference, semantic retrieval, and vector database storage into a single, streamlined stack.</p>
+</div>
+<div class="paragraph">
+<p><strong>Key Learning Objectives:</strong>
+- Deploy RAG using Llama Stack Operator and LLMInferenceService
+- Use embedded vector stores (Inline FAISS, Inline Milvus Lite) for "Lean RAG"
+- Process documents with Docling
+- Evaluate RAG quality with RAGAS
+- Deploy models using ModelCars (OCI containers)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_module_overview"><a class="anchor" href="#_module_overview"></a>Module Overview</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_what_is_llama_stack"><a class="anchor" href="#_what_is_llama_stack"></a>What is Llama Stack?</h3>
+<div class="paragraph">
+<p>The <strong>Llama Stack Operator</strong> is RHOAI 3.0&#8217;s integrated solution for RAG deployments. It provides:
+- <strong>Unified API</strong>: Single interface for LLM inference, vector operations, and RAG workflows
+- <strong>Embedded Vector Stores</strong>: Lightweight, embedded options for rapid development
+- <strong>Standardized Components</strong>: Consistent deployment model across environments
+- <strong>Production Ready</strong>: Scales from development to production</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_lean_rag_architecture"><a class="anchor" href="#_lean_rag_architecture"></a>"Lean RAG" Architecture</h3>
+<div class="paragraph">
+<p>For the Lean RAG Accelerator, we emphasize a "Lean RAG" approach:
+- <strong>Embedded Vector Stores</strong>: No external database dependencies
+- <strong>Minimal Infrastructure</strong>: Single-node or lightweight deployments
+- <strong>Rapid Iteration</strong>: Fast setup for development and testing
+- <strong>Cost Effective</strong>: Reduced operational overhead</p>
+</div>
+<div class="paragraph">
+<p><strong>Analogy</strong>: Think of it as a high-performance espresso machine (vLLM/llm-d) paired with a simple, high-speed local coffee grinder (Inline FAISS/Milvus Lite) that processes fresh, domain-specific coffee beans (Docling-processed data), all operating efficiently inside your kitchen (OpenShift AI).</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_topics_covered"><a class="anchor" href="#_topics_covered"></a>Topics Covered</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_section_4_1_document_ingestion_with_docling"><a class="anchor" href="#_section_4_1_document_ingestion_with_docling"></a>Section 4.1: Document Ingestion with Docling</h3>
+<div class="paragraph">
+<p>Learn to ingest and chunk unstructured enterprise data (PDFs, images, audio) using the <strong>Docling</strong> Python library. Docling transforms raw unstructured data into structured, machine-readable formats that RAG pipelines can consume.</p>
+</div>
+<div class="paragraph">
+<p><strong>Key Topics:</strong>
+- Docling capabilities and use cases
+- Document processing workflow
+- Chunking strategies
+- Integration with Llama Stack</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_section_4_2_orchestrating_rag_workflows_with_llama_stack"><a class="anchor" href="#_section_4_2_orchestrating_rag_workflows_with_llama_stack"></a>Section 4.2: Orchestrating RAG Workflows with Llama Stack</h3>
+<div class="paragraph">
+<p>Understand how to orchestrate RAG workflows using the <strong>Llama Stack API</strong>. This includes standardizing "Response Generation" and "Vector IO" processes through the LLMInferenceService Custom Resource.</p>
+</div>
+<div class="paragraph">
+<p><strong>Key Topics:</strong>
+- LLMInferenceService CR configuration
+- RAG workflow orchestration
+- Response generation standardization
+- Vector IO operations</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_section_4_3_embedded_vector_store_integration"><a class="anchor" href="#_section_4_3_embedded_vector_store_integration"></a>Section 4.3: Embedded Vector Store Integration</h3>
+<div class="paragraph">
+<p>Explore embedded vector database options for "Lean RAG" deployments:
+- <strong>Inline FAISS</strong>: Lightweight, embedded SQLite backend (Technology Preview)
+- <strong>Inline Milvus Lite</strong>: Embedded Milvus with local SQLite storage</p>
+</div>
+<div class="paragraph">
+<p><strong>Key Topics:</strong>
+- When to use embedded vs. external vector stores
+- Inline FAISS configuration
+- Inline Milvus Lite configuration
+- Performance considerations</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_section_4_4_rag_evaluation_with_ragas"><a class="anchor" href="#_section_4_4_rag_evaluation_with_ragas"></a>Section 4.4: RAG Evaluation with RAGAS</h3>
+<div class="paragraph">
+<p>Measure RAG system quality using the <strong>Ragas</strong> evaluation provider (Technology Preview). Focus on objective metrics and the Inline Provider mode for development.</p>
+</div>
+<div class="paragraph">
+<p><strong>Key Topics:</strong>
+- RAGAS evaluation metrics (Faithfulness, Answer Relevancy, Context Precision)
+- Inline Provider mode configuration
+- Early quality measurement
+- Integration with development workflow</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_section_4_5_deployment_with_gitops"><a class="anchor" href="#_section_4_5_deployment_with_gitops"></a>Section 4.5: Deployment with GitOps</h3>
+<div class="paragraph">
+<p>Discover how to deploy the RAG application stack using GitOps and ArgoCD, ensuring repeatability and consistency in deployments.</p>
+</div>
+<div class="paragraph">
+<p><strong>Key Topics:</strong>
+- ModelCars (OCI container) deployment
+- LLMInferenceService deployment
+- ArgoCD Application configuration
+- GitOps workflow</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prerequisites"><a class="anchor" href="#_prerequisites"></a>Prerequisites</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before starting this module, ensure you have:
+- Completed Modules 1-3 (understanding inference economics, model optimization, serving)
+- Red Hat OpenShift AI 3.0 installed and configured
+- Llama Stack Operator installed
+- Access to a cluster with GPU nodes
+- Basic understanding of Kubernetes Custom Resources</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_module_structure"><a class="anchor" href="#_module_structure"></a>Module Structure</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This module follows a practical, hands-on approach:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Concept Introduction</strong>: Understand the component and its role</p>
+</li>
+<li>
+<p><strong>Configuration</strong>: Learn how to configure the component</p>
+</li>
+<li>
+<p><strong>Deployment</strong>: Deploy and verify the component</p>
+</li>
+<li>
+<p><strong>Integration</strong>: Integrate with other components</p>
+</li>
+<li>
+<p><strong>Best Practices</strong>: Learn optimization and troubleshooting</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_expected_outcomes"><a class="anchor" href="#_expected_outcomes"></a>Expected Outcomes</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>By the end of this module, you will be able to:
+- Deploy a complete RAG system using Llama Stack Operator
+- Configure embedded vector stores for "Lean RAG" deployments
+- Process enterprise documents with Docling
+- Evaluate RAG quality with RAGAS
+- Deploy models using ModelCars
+- Integrate all components into a working RAG pipeline</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_next_steps"><a class="anchor" href="#_next_steps"></a>Next Steps</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Proceed to Section 4.1 to learn about document ingestion with Docling.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="../module-3-high-performance-serving-with-vllm-llm-d/implementing-prefix-caching-to-reuse-key-value-kv-cache-for-rag-system-prompts.html">Implementing prefix caching to reuse Key-Value (KV) cache for RAG system prompts</a></span>
+  <span class="next"><a href="ingesting-and-chunking-unstructured-enterprise-data-pdfs-using-docling.html">Ingesting and Chunking Unstructured Enterprise Data using Docling</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

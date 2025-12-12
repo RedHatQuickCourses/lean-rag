@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Using LLM Compressor to Create Optimized Models :: Lean RAG Accelerator QuickStart Training</title>
+    <link rel="prev" href="techniques-for-model-compression-quantization-fp8-int8-and-sparsity.html">
+    <link rel="next" href="implementing-quantization-recipes-eg-smoothquant-gptq-to-reduce-gpu-memory-footprint.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Lean RAG Accelerator QuickStart Training</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="lean-rag" data-version="1.0.0">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Lean RAG Accelerator QuickStart Training</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../module-1-inference-economics-rhoai-30-architecture/module-1-inference-economics-rhoai-30-architecture.html">Module 1: Inference Economics &amp; RHOAI 3.0 Architecture</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-1-inference-economics-rhoai-30-architecture/analysis-of-the-impossible-trinity-in-llm-deployments-balancing-accuracy-latency-and-cost.html">Analysis of the "Impossible Trinity" in LLM Deployments: Balancing Accuracy, Latency, and Cost</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-1-inference-economics-rhoai-30-architecture/identifying-critical-gpu-underutilization-and-the-role-of-memory-management-in-inference-costs.html">Identifying "Critical GPU Underutilization" and the Role of Memory Management in Inference Costs</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-1-inference-economics-rhoai-30-architecture/overview-of-the-red-hat-ai-30-ai-factory-approach-for-industrialized-model-serving.html">Overview of the Red Hat OpenShift AI 3.0 "AI Factory" Approach for Industrialized Model Serving</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-1-inference-economics-rhoai-30-architecture/mapping-the-rhoai-30-inference-stack-vllm-llm-d-and-kserve-integration.html">Mapping the RHOAI 3.0 inference stack: vLLM, llm-d, and KServe integration</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="module-2-model-optimization-with-llm-compressor.html">Module 2: Model Optimization with LLM Compressor</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="techniques-for-model-compression-quantization-fp8-int8-and-sparsity.html">Techniques for Model Compression: Quantization (FP8, INT8) and Sparsity</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="using-llm-compressor-to-create-optimized-modelcars-containerized-models.html">Using LLM Compressor to Create Optimized Models</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="implementing-quantization-recipes-eg-smoothquant-gptq-to-reduce-gpu-memory-footprint.html">Implementing quantization recipes (e.g., SmoothQuant, GPTQ) to reduce GPU memory footprint</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="accessing-validated-pre-optimized-models-eg-lean-llama-from-the-red-hat-model-catalog.html">Accessing Validated, Pre-optimized Models from the Red Hat Model Catalog</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/module-3-high-performance-serving-with-vllm-llm-d.html">Module 3: High-Performance Serving with vLLM &amp; llm-d</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/configuring-vllm-for-maximum-throughput-using-pagedattention-and-continuous-batching.html">Configuring vLLM for Maximum Throughput Using PagedAttention and Continuous Batching</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/tuning-vllm-engine-arguments---gpu-memory-utilization-and---max-num-seqs.html">tuning vLLM engine arguments: <code>--gpu-memory-utilization</code> and <code>--max-num-seqs</code></a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/deploying-distributed-inference-with-llm-d-to-separate-prefill-and-decode-phases-disaggregation.html">Deploying distributed inference with llm-d to separate prefill and decode phases (disaggregation)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/implementing-prefix-caching-to-reuse-key-value-kv-cache-for-rag-system-prompts.html">Implementing prefix caching to reuse Key-Value (KV) cache for RAG system prompts</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../module-4-standardized-rag-implementation/module-4-standardized-rag-implementation.html">Module 4: Standardized RAG Implementation</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-4-standardized-rag-implementation/ingesting-and-chunking-unstructured-enterprise-data-pdfs-using-docling.html">Ingesting and Chunking Unstructured Enterprise Data using Docling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-4-standardized-rag-implementation/orchestrating-rag-workflows-using-the-llama-stack-api-for-standardized-response-generation-and-vector-io.html">Orchestrating RAG Workflows with the Llama Stack API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-4-standardized-rag-implementation/integrating-vector-databases-eg-milvus-chroma-via-llama-stack-providers.html">Integrating Vector Databases via Llama Stack Providers</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-4-standardized-rag-implementation/deploying-the-rag-application-stack-using-gitops-and-argocd-for-repeatability.html">deploying the RAG application stack using GitOps and ArgoCD for repeatability</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../module-5-validation-benchmarking/module-5-validation-benchmarking.html">Module 5: Validation &amp; Benchmarking</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-5-validation-benchmarking/defining-service-level-objectives-slos-for-time-to-first-token-ttft-and-inter-token-latency-itl.html">Defining Service Level Objectives (SLOs) for Time To First Token (TTFT) and Inter-Token Latency (ITL)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-5-validation-benchmarking/simulating-real-world-traffic-load-using-guidellm-to-validate-throughput-gains.html">Simulating real-world traffic load using GuideLLM to validate throughput gains</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-5-validation-benchmarking/comparing-performance-metrics-throughput-vs-latency.html">Comparing performance metrics (throughput vs. latency</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/appendix.html">Appendix</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Lean RAG Accelerator QuickStart Training</span>
+    <span class="version">1.0.0</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Lean RAG Accelerator QuickStart Training</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1.0.0</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Lean RAG Accelerator QuickStart Training</a></li>
+    <li><a href="module-2-model-optimization-with-llm-compressor.html">Module 2: Model Optimization with LLM Compressor</a></li>
+    <li><a href="using-llm-compressor-to-create-optimized-modelcars-containerized-models.html">Using LLM Compressor to Create Optimized Models</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Using LLM Compressor to Create Optimized Models</h1>
+<div class="sect1">
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>RHOAI 3.0&#8217;s LLM Compressor is the tool for creating optimized, quantized models for production deployment. This section covers how to use LLM Compressor to create optimized models (sometimes called "ModelCars" - containerized, optimized models).</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_is_llm_compressor"><a class="anchor" href="#_what_is_llm_compressor"></a>What is LLM Compressor?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>LLM Compressor is RHOAI 3.0&#8217;s model optimization tool that:
+- Applies quantization (SmoothQuant, GPTQ)
+- Creates optimized model artifacts
+- Integrates with RHOAI 3.0 Model Registry
+- Produces production-ready models</p>
+</div>
+<div class="paragraph">
+<p><strong>Key Features:</strong>
+- Kubernetes-native (QuantizationRecipe CRD)
+- Supports multiple quantization methods
+- Integrates with RHOAI 3.0 infrastructure
+- Automated optimization workflows</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_understanding_quantizationrecipe"><a class="anchor" href="#_understanding_quantizationrecipe"></a>Understanding QuantizationRecipe</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>LLM Compressor uses the <code>QuantizationRecipe</code> Custom Resource Definition (CRD) to define optimization jobs.</p>
+</div>
+<div class="sect2">
+<h3 id="_recipe_structure"><a class="anchor" href="#_recipe_structure"></a>Recipe Structure</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: ai.redhat.com/v1alpha1
+kind: QuantizationRecipe
+metadata:
+  name: llama-3.1-8b-quantization
+  namespace: default
+spec:
+  model:           # Source model configuration
+  quantization:    # Quantization method and parameters
+  output:          # Output format and storage
+  resources:       # Resource requirements</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_by_step_creating_a_quantization_recipe"><a class="anchor" href="#_step_by_step_creating_a_quantization_recipe"></a>Step-by-Step: Creating a Quantization Recipe</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_step_1_define_model_source"><a class="anchor" href="#_step_1_define_model_source"></a>Step 1: Define Model Source</h3>
+<div class="paragraph">
+<p><strong>Model Source Options:</strong>
+- HuggingFace: <code>huggingface://model-name</code>
+- S3: <code>s3://bucket/path</code>
+- PVC: <code>pvc://pvc-name/path</code>
+- RHOAI Model Registry: <code>registry://model-name</code></p>
+</div>
+<div class="paragraph">
+<p><strong>Example Configuration:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  model:
+    name: meta-llama/Llama-3.1-8B
+    baseModel: llama-3.1-8b
+    source:
+      uri: huggingface://meta-llama/Llama-3.1-8B-Instruct
+      format: safetensors  # or pytorch, onnx</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Documentation Gap</strong>: Need to verify exact URI format for:
+- RHOAI Model Registry access
+- S3 credentials and configuration
+- PVC mount paths</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_configure_quantization_method"><a class="anchor" href="#_step_2_configure_quantization_method"></a>Step 2: Configure Quantization Method</h3>
+<div class="paragraph">
+<p><strong>SmoothQuant Configuration:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  quantization:
+    method: smoothquant
+    targetPrecision: int8
+    smoothquant:
+      alpha: 0.5  # Smoothing factor (0.0 to 1.0)
+      calibration:
+        dataset: &lt;calibration-dataset-uri&gt;
+        numSamples: 512  # Typical: 512-1024
+        batchSize: 8</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>GPTQ Configuration:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  quantization:
+    method: gptq
+    targetPrecision: int4  # or int8
+    gptq:
+      bits: 4
+      groupSize: 128
+      calibration:
+        dataset: &lt;calibration-dataset-uri&gt;
+        numSamples: 128  # GPTQ typically needs fewer samples
+        batchSize: 1</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_configure_calibration_dataset"><a class="anchor" href="#_step_3_configure_calibration_dataset"></a>Step 3: Configure Calibration Dataset</h3>
+<div class="paragraph">
+<p><strong>Calibration Dataset Requirements:</strong>
+- Format: Text files, JSON, or dataset URI
+- Size: 512-1024 samples (SmoothQuant), 128+ (GPTQ)
+- Content: Representative of your use case
+- Location: S3, PVC, or HuggingFace dataset</p>
+</div>
+<div class="paragraph">
+<p><strong>Example Dataset Sources:</strong>
+- HuggingFace dataset: <code>dataset://wikitext</code>
+- S3: <code>s3://bucket/calibration-data/</code>
+- PVC: <code>pvc://pvc-name/calibration-data/</code></p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Important</strong>: The calibration dataset should be representative of your actual use case. Using unrelated data can reduce quantization quality.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_4_configure_output_storage"><a class="anchor" href="#_step_4_configure_output_storage"></a>Step 4: Configure Output Storage</h3>
+<div class="paragraph">
+<p><strong>Output Options:</strong>
+- PVC (Persistent Volume Claim)
+- S3 (S3-compatible storage)</p>
+</div>
+<div class="paragraph">
+<p><strong>PVC Configuration:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  output:
+    format: onnx  # or safetensors, pytorch
+    storage:
+      type: pvc
+      pvc:
+        name: model-storage-pvc
+        path: models/llama-3.1-8b-quantized</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>S3 Configuration:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  output:
+    format: onnx
+    storage:
+      type: s3
+      s3:
+        bucket: my-model-bucket
+        prefix: models/llama-3.1-8b-quantized
+        endpoint: s3.amazonaws.com
+        credentials: s3-credentials-secret</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_5_set_resource_requirements"><a class="anchor" href="#_step_5_set_resource_requirements"></a>Step 5: Set Resource Requirements</h3>
+<div class="paragraph">
+<p><strong>Typical Resource Requirements:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  resources:
+    requests:
+      memory: "16Gi"
+      cpu: "4"
+      nvidia.com/gpu: 1
+    limits:
+      memory: "32Gi"
+      cpu: "8"
+      nvidia.com/gpu: 1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Resource Guidelines:</strong>
+- <strong>GPU</strong>: 1 GPU required (A10G or equivalent)
+- <strong>Memory</strong>: 16-32GB depending on model size
+- <strong>CPU</strong>: 4-8 cores for calibration processing
+- <strong>Duration</strong>: 30-60 minutes for Llama 3.1 8B</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_complete_example_smoothquant_recipe"><a class="anchor" href="#_complete_example_smoothquant_recipe"></a>Complete Example: SmoothQuant Recipe</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: ai.redhat.com/v1alpha1
+kind: QuantizationRecipe
+metadata:
+  name: llama-3.1-8b-smoothquant
+  namespace: lean-rag-accelerator
+spec:
+  model:
+    name: meta-llama/Llama-3.1-8B-Instruct
+    baseModel: llama-3.1-8b
+    source:
+      uri: huggingface://meta-llama/Llama-3.1-8B-Instruct
+      format: safetensors
+
+  quantization:
+    method: smoothquant
+    targetPrecision: int8
+    smoothquant:
+      alpha: 0.5
+      calibration:
+        dataset: dataset://wikitext
+        numSamples: 512
+        batchSize: 8
+
+  output:
+    format: onnx
+    storage:
+      type: pvc
+      pvc:
+        name: model-storage-pvc
+        path: models/llama-3.1-8b-int8
+
+  resources:
+    requests:
+      memory: "16Gi"
+      cpu: "4"
+      nvidia.com/gpu: 1
+    limits:
+      memory: "32Gi"
+      cpu: "8"
+      nvidia.com/gpu: 1</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_deploying_the_quantization_recipe"><a class="anchor" href="#_deploying_the_quantization_recipe"></a>Deploying the Quantization Recipe</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_step_1_apply_the_recipe"><a class="anchor" href="#_step_1_apply_the_recipe"></a>Step 1: Apply the Recipe</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f quantization-recipe.yaml</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_monitor_the_job"><a class="anchor" href="#_step_2_monitor_the_job"></a>Step 2: Monitor the Job</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Watch recipe status
+kubectl get quantizationrecipe llama-3.1-8b-smoothquant -w
+
+# Check job logs
+kubectl get jobs -l app=quantization
+kubectl logs -l app=quantization --tail=100 -f
+
+# Describe for detailed status
+kubectl describe quantizationrecipe llama-3.1-8b-smoothquant</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_verify_completion"><a class="anchor" href="#_step_3_verify_completion"></a>Step 3: Verify Completion</h3>
+<div class="paragraph">
+<p><strong>Check Status:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get quantizationrecipe llama-3.1-8b-smoothquant -o jsonpath='{.status.phase}'
+# Should show: Completed</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Get Output Location:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get quantizationrecipe llama-3.1-8b-smoothquant -o jsonpath='{.status.output.storage.uri}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_4_verify_optimized_model"><a class="anchor" href="#_step_4_verify_optimized_model"></a>Step 4: Verify Optimized Model</h3>
+<div class="paragraph">
+<p><strong>For PVC Storage:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># List files in PVC
+oc rsh &lt;pod-with-pvc-access&gt; ls -lh /mnt/models/llama-3.1-8b-int8
+
+# Check model size (should be ~50% of original)
+oc rsh &lt;pod-with-pvc-access&gt; du -sh /mnt/models/llama-3.1-8b-int8</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Expected Results:</strong>
+- Original (FP16): ~16GB
+- Quantized (INT8): ~8GB (50% reduction)
+- Format: ONNX or safetensors (as specified)</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_troubleshooting"><a class="anchor" href="#_troubleshooting"></a>Troubleshooting</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_common_issues"><a class="anchor" href="#_common_issues"></a>Common Issues</h3>
+<div class="sect3">
+<h4 id="_issue_calibration_dataset_not_found"><a class="anchor" href="#_issue_calibration_dataset_not_found"></a>Issue: Calibration Dataset Not Found</h4>
+<div class="paragraph">
+<p><strong>Symptoms:</strong>
+- Job fails with "dataset not found" error
+- Cannot access calibration data</p>
+</div>
+<div class="paragraph">
+<p><strong>Solutions:</strong>
+- Verify dataset URI is correct
+- Check S3/PVC credentials and permissions
+- Ensure dataset format is supported</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_issue_out_of_memory"><a class="anchor" href="#_issue_out_of_memory"></a>Issue: Out of Memory</h4>
+<div class="paragraph">
+<p><strong>Symptoms:</strong>
+- Job fails with OOM error
+- GPU memory exhausted</p>
+</div>
+<div class="paragraph">
+<p><strong>Solutions:</strong>
+- Reduce <code>batchSize</code> in calibration config
+- Reduce <code>numSamples</code> (try 256 instead of 512)
+- Use larger GPU or reduce model size</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_issue_quantization_fails"><a class="anchor" href="#_issue_quantization_fails"></a>Issue: Quantization Fails</h4>
+<div class="paragraph">
+<p><strong>Symptoms:</strong>
+- Job completes but model is invalid
+- Accuracy degradation is too high</p>
+</div>
+<div class="paragraph">
+<p><strong>Solutions:</strong>
+- Verify calibration dataset is representative
+- Try different <code>alpha</code> value (SmoothQuant)
+- Use more calibration samples
+- Check model format compatibility</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_issue_model_format_incompatibility"><a class="anchor" href="#_issue_model_format_incompatibility"></a>Issue: Model Format Incompatibility</h4>
+<div class="paragraph">
+<p><strong>Symptoms:</strong>
+- Cannot load quantized model
+- Format errors during inference</p>
+</div>
+<div class="paragraph">
+<p><strong>Solutions:</strong>
+- Verify output format matches inference runtime
+- Check model format compatibility
+- Try different format (ONNX vs. safetensors)</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_best_practices"><a class="anchor" href="#_best_practices"></a>Best Practices</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_calibration_dataset"><a class="anchor" href="#_calibration_dataset"></a>Calibration Dataset</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Size</strong>: 512-1024 samples for SmoothQuant, 128+ for GPTQ</p>
+</li>
+<li>
+<p><strong>Representativeness</strong>: Should match your use case</p>
+</li>
+<li>
+<p><strong>Format</strong>: Use same format as production data</p>
+</li>
+<li>
+<p><strong>Quality</strong>: Use high-quality, diverse samples</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_resource_allocation"><a class="anchor" href="#_resource_allocation"></a>Resource Allocation</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>GPU</strong>: Always allocate 1 GPU for quantization</p>
+</li>
+<li>
+<p><strong>Memory</strong>: Allocate 2x model size for processing</p>
+</li>
+<li>
+<p><strong>Time</strong>: Allow 30-60 minutes for completion</p>
+</li>
+<li>
+<p><strong>Monitoring</strong>: Watch logs for progress</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_storage"><a class="anchor" href="#_storage"></a>Storage</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Location</strong>: Use persistent storage (PVC or S3)</p>
+</li>
+<li>
+<p><strong>Path</strong>: Organize by model name and precision</p>
+</li>
+<li>
+<p><strong>Backup</strong>: Keep original models before quantization</p>
+</li>
+<li>
+<p><strong>Versioning</strong>: Tag quantized models with version</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_integration_with_rhoai_3_0"><a class="anchor" href="#_integration_with_rhoai_3_0"></a>Integration with RHOAI 3.0</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_model_registry"><a class="anchor" href="#_model_registry"></a>Model Registry</h3>
+<div class="paragraph">
+<p>After quantization, you can:
+- Register model in RHOAI Model Catalog
+- Tag with metadata (precision, method, accuracy)
+- Share across teams and projects</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Documentation Gap</strong>: Need details on:
+- How to register quantized models in Model Catalog
+- Model metadata schema
+- Sharing and access controls</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_serving_integration"><a class="anchor" href="#_serving_integration"></a>Serving Integration</h3>
+<div class="paragraph">
+<p>Quantized models can be used with:
+- vLLM ServingRuntime
+- KServe InferenceService
+- llm-d orchestration</p>
+</div>
+<div class="paragraph">
+<p><strong>Example Reference in InferenceService:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  predictor:
+    model:
+      storageUri: pvc://model-storage-pvc/models/llama-3.1-8b-int8</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_key_takeaways"><a class="anchor" href="#_key_takeaways"></a>Key Takeaways</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>LLM Compressor uses QuantizationRecipe CRD for Kubernetes-native optimization</p>
+</li>
+<li>
+<p>SmoothQuant (INT8) is recommended for most deployments</p>
+</li>
+<li>
+<p>Calibration dataset quality is critical for good results</p>
+</li>
+<li>
+<p>Quantization takes 30-60 minutes for typical models</p>
+</li>
+<li>
+<p>Output models are 50% smaller with 95%+ accuracy retention</p>
+</li>
+<li>
+<p>Integrates seamlessly with RHOAI 3.0 serving stack</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_next_steps"><a class="anchor" href="#_next_steps"></a>Next Steps</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Learn about specific quantization recipes (SmoothQuant, GPTQ)</p>
+</li>
+<li>
+<p>Understand how to access pre-optimized models from Model Catalog</p>
+</li>
+<li>
+<p>Proceed to Module 3 for serving optimized models</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Documentation Gaps</strong>: This section would benefit from:
+- Screenshots of QuantizationRecipe status in Kubernetes
+- Step-by-step video walkthrough
+- Complete calibration dataset preparation guide
+- Model Registry integration examples
+- Troubleshooting flowcharts</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="techniques-for-model-compression-quantization-fp8-int8-and-sparsity.html">Techniques for Model Compression: Quantization (FP8, INT8) and Sparsity</a></span>
+  <span class="next"><a href="implementing-quantization-recipes-eg-smoothquant-gptq-to-reduce-gpu-memory-footprint.html">Implementing quantization recipes (e.g., SmoothQuant, GPTQ) to reduce GPU memory footprint</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

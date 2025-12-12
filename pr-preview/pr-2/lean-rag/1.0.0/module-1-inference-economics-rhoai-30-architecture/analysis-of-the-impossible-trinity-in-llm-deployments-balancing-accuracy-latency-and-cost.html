@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Analysis of the "Impossible Trinity" in LLM Deployments: Balancing Accuracy, Latency, and Cost :: Lean RAG Accelerator QuickStart Training</title>
+    <link rel="prev" href="module-1-inference-economics-rhoai-30-architecture.html">
+    <link rel="next" href="identifying-critical-gpu-underutilization-and-the-role-of-memory-management-in-inference-costs.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">Lean RAG Accelerator QuickStart Training</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="lean-rag" data-version="1.0.0">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Lean RAG Accelerator QuickStart Training</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="module-1-inference-economics-rhoai-30-architecture.html">Module 1: Inference Economics &amp; RHOAI 3.0 Architecture</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="analysis-of-the-impossible-trinity-in-llm-deployments-balancing-accuracy-latency-and-cost.html">Analysis of the "Impossible Trinity" in LLM Deployments: Balancing Accuracy, Latency, and Cost</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="identifying-critical-gpu-underutilization-and-the-role-of-memory-management-in-inference-costs.html">Identifying "Critical GPU Underutilization" and the Role of Memory Management in Inference Costs</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="overview-of-the-red-hat-ai-30-ai-factory-approach-for-industrialized-model-serving.html">Overview of the Red Hat OpenShift AI 3.0 "AI Factory" Approach for Industrialized Model Serving</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="mapping-the-rhoai-30-inference-stack-vllm-llm-d-and-kserve-integration.html">Mapping the RHOAI 3.0 inference stack: vLLM, llm-d, and KServe integration</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../module-2-model-optimization-with-llm-compressor/module-2-model-optimization-with-llm-compressor.html">Module 2: Model Optimization with LLM Compressor</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-2-model-optimization-with-llm-compressor/techniques-for-model-compression-quantization-fp8-int8-and-sparsity.html">Techniques for Model Compression: Quantization (FP8, INT8) and Sparsity</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-2-model-optimization-with-llm-compressor/using-llm-compressor-to-create-optimized-modelcars-containerized-models.html">Using LLM Compressor to Create Optimized Models</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-2-model-optimization-with-llm-compressor/implementing-quantization-recipes-eg-smoothquant-gptq-to-reduce-gpu-memory-footprint.html">Implementing quantization recipes (e.g., SmoothQuant, GPTQ) to reduce GPU memory footprint</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-2-model-optimization-with-llm-compressor/accessing-validated-pre-optimized-models-eg-lean-llama-from-the-red-hat-model-catalog.html">Accessing Validated, Pre-optimized Models from the Red Hat Model Catalog</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/module-3-high-performance-serving-with-vllm-llm-d.html">Module 3: High-Performance Serving with vLLM &amp; llm-d</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/configuring-vllm-for-maximum-throughput-using-pagedattention-and-continuous-batching.html">Configuring vLLM for Maximum Throughput Using PagedAttention and Continuous Batching</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/tuning-vllm-engine-arguments---gpu-memory-utilization-and---max-num-seqs.html">tuning vLLM engine arguments: <code>--gpu-memory-utilization</code> and <code>--max-num-seqs</code></a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/deploying-distributed-inference-with-llm-d-to-separate-prefill-and-decode-phases-disaggregation.html">Deploying distributed inference with llm-d to separate prefill and decode phases (disaggregation)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-3-high-performance-serving-with-vllm-llm-d/implementing-prefix-caching-to-reuse-key-value-kv-cache-for-rag-system-prompts.html">Implementing prefix caching to reuse Key-Value (KV) cache for RAG system prompts</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../module-4-standardized-rag-implementation/module-4-standardized-rag-implementation.html">Module 4: Standardized RAG Implementation</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-4-standardized-rag-implementation/ingesting-and-chunking-unstructured-enterprise-data-pdfs-using-docling.html">Ingesting and Chunking Unstructured Enterprise Data using Docling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-4-standardized-rag-implementation/orchestrating-rag-workflows-using-the-llama-stack-api-for-standardized-response-generation-and-vector-io.html">Orchestrating RAG Workflows with the Llama Stack API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-4-standardized-rag-implementation/integrating-vector-databases-eg-milvus-chroma-via-llama-stack-providers.html">Integrating Vector Databases via Llama Stack Providers</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-4-standardized-rag-implementation/deploying-the-rag-application-stack-using-gitops-and-argocd-for-repeatability.html">deploying the RAG application stack using GitOps and ArgoCD for repeatability</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../module-5-validation-benchmarking/module-5-validation-benchmarking.html">Module 5: Validation &amp; Benchmarking</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-5-validation-benchmarking/defining-service-level-objectives-slos-for-time-to-first-token-ttft-and-inter-token-latency-itl.html">Defining Service Level Objectives (SLOs) for Time To First Token (TTFT) and Inter-Token Latency (ITL)</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-5-validation-benchmarking/simulating-real-world-traffic-load-using-guidellm-to-validate-throughput-gains.html">Simulating real-world traffic load using GuideLLM to validate throughput gains</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../module-5-validation-benchmarking/comparing-performance-metrics-throughput-vs-latency.html">Comparing performance metrics (throughput vs. latency</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/appendix.html">Appendix</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Lean RAG Accelerator QuickStart Training</span>
+    <span class="version">1.0.0</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Lean RAG Accelerator QuickStart Training</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1.0.0</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Lean RAG Accelerator QuickStart Training</a></li>
+    <li><a href="module-1-inference-economics-rhoai-30-architecture.html">Module 1: Inference Economics &amp; RHOAI 3.0 Architecture</a></li>
+    <li><a href="analysis-of-the-impossible-trinity-in-llm-deployments-balancing-accuracy-latency-and-cost.html">Analysis of the "Impossible Trinity" in LLM Deployments: Balancing Accuracy, Latency, and Cost</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Analysis of the "Impossible Trinity" in LLM Deployments: Balancing Accuracy, Latency, and Cost</h1>
+<div class="sect1">
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the realm of large language models (LLMs), achieving optimal performance is a complex balancing act. This challenge is often referred to as the "Impossible Trinity," where the goals of maximizing accuracy, minimizing latency, and controlling costs must be reconciled. Understanding this fundamental constraint is critical for deploying LLMs in production environments.</p>
+</div>
+<div class="paragraph">
+<p><strong>The Hard Truth</strong>: You cannot simultaneously optimize all three objectives. Every deployment decision involves trade-offs between these competing goals.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_understanding_the_impossible_trinity"><a class="anchor" href="#_understanding_the_impossible_trinity"></a>Understanding the Impossible Trinity</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The "Impossible Trinity" in LLM deployments represents the inherent tension among three critical factors:</p>
+</div>
+<div class="sect2">
+<h3 id="_accuracy"><a class="anchor" href="#_accuracy"></a>Accuracy</h3>
+<div class="paragraph">
+<p>Accuracy refers to the model&#8217;s ability to generate correct, contextually relevant, and high-quality responses.</p>
+</div>
+<div class="paragraph">
+<p><strong>Factors affecting accuracy:</strong>
+- Model size (parameters): Larger models generally provide better accuracy
+- Model precision: FP32 &gt; FP16 &gt; FP8 &gt; INT8 &gt; INT4
+- Context length: Longer contexts enable better understanding
+- Training data quality and quantity</p>
+</div>
+<div class="paragraph">
+<p><strong>The accuracy cost:</strong>
+- Larger models require more GPU memory
+- Higher precision requires more compute
+- Better accuracy often means slower inference</p>
+</div>
+<div class="paragraph">
+<p><strong>Real-world impact:</strong>
+- Customer satisfaction depends on response quality
+- Business-critical applications require high accuracy
+- Regulatory compliance may mandate certain accuracy thresholds</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_latency"><a class="anchor" href="#_latency"></a>Latency</h3>
+<div class="paragraph">
+<p>Latency is the time taken by the model to process input and generate output. It&#8217;s typically measured as:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Time to First Token (TTFT)</strong>: Time until the first token is generated</p>
+</li>
+<li>
+<p><strong>Inter-Token Latency (ITL)</strong>: Time between subsequent tokens</p>
+</li>
+<li>
+<p><strong>End-to-End Latency</strong>: Total time for complete response</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Factors affecting latency:</strong>
+- Model size and complexity
+- Hardware acceleration (GPU type, memory bandwidth)
+- Batch size and concurrent requests
+- Network overhead
+- Memory access patterns</p>
+</div>
+<div class="paragraph">
+<p><strong>The latency cost:</strong>
+- Lower latency often requires smaller models or quantization
+- Real-time applications need &lt;100ms TTFT for good UX
+- Streaming responses require consistent ITL</p>
+</div>
+<div class="paragraph">
+<p><strong>Real-world impact:</strong>
+- User experience degrades with high latency
+- Interactive applications require sub-second responses
+- High latency can cause user abandonment</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_cost"><a class="anchor" href="#_cost"></a>Cost</h3>
+<div class="paragraph">
+<p>Cost encompasses the financial and resource expenditure involved in deploying and maintaining the LLM:</p>
+</div>
+<div class="paragraph">
+<p><strong>Cost components:</strong>
+- <strong>CapEx</strong>: GPU hardware purchases, infrastructure
+- <strong>OpEx</strong>: Cloud instance costs, power consumption, maintenance
+- <strong>Opportunity Cost</strong>: Idle resources, underutilized capacity</p>
+</div>
+<div class="paragraph">
+<p><strong>Factors affecting cost:</strong>
+- GPU utilization rates (target: 85-90%, typical: &lt;40%)
+- Model size and memory requirements
+- Throughput (requests per second per GPU)
+- Infrastructure overhead</p>
+</div>
+<div class="paragraph">
+<p><strong>The cost reality:</strong>
+- Most deployments utilize &lt;40% of GPU capacity
+- Paying for 60% idle capacity is common
+- 95% of AI pilots fail due to "runaway inference economics"</p>
+</div>
+<div class="paragraph">
+<p><strong>Real-world impact:</strong>
+- Budget constraints limit model choices
+- Cost per request determines business viability
+- Scaling requires cost-effective solutions</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_trade_off_triangle"><a class="anchor" href="#_the_trade_off_triangle"></a>The Trade-off Triangle</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Impossible Trinity creates a fundamental constraint: optimizing one dimension typically requires compromising another.</p>
+</div>
+<div class="sect2">
+<h3 id="_scenario_1_prioritize_accuracy"><a class="anchor" href="#_scenario_1_prioritize_accuracy"></a>Scenario 1: Prioritize Accuracy</h3>
+<div class="paragraph">
+<p><strong>Decision</strong>: Use large, high-precision model (e.g., Llama 3.1 70B, FP16)</p>
+</div>
+<div class="paragraph">
+<p><strong>Trade-offs:</strong>
+- ✅ High accuracy and quality
+- ❌ High latency (slow inference)
+- ❌ High cost (requires multiple GPUs, expensive infrastructure)</p>
+</div>
+<div class="paragraph">
+<p><strong>Use cases:</strong>
+- Research and development
+- Batch processing (non-real-time)
+- High-stakes applications where accuracy is paramount</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_scenario_2_prioritize_latency"><a class="anchor" href="#_scenario_2_prioritize_latency"></a>Scenario 2: Prioritize Latency</h3>
+<div class="paragraph">
+<p><strong>Decision</strong>: Use small, quantized model (e.g., Llama 3.2 3B, INT8)</p>
+</div>
+<div class="paragraph">
+<p><strong>Trade-offs:</strong>
+- ✅ Low latency (fast responses)
+- ✅ Lower cost (single GPU, efficient)
+- ❌ Reduced accuracy (may miss nuances)</p>
+</div>
+<div class="paragraph">
+<p><strong>Use cases:</strong>
+- Real-time chat applications
+- Interactive user interfaces
+- High-throughput scenarios</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_scenario_3_prioritize_cost"><a class="anchor" href="#_scenario_3_prioritize_cost"></a>Scenario 3: Prioritize Cost</h3>
+<div class="paragraph">
+<p><strong>Decision</strong>: Use optimized, quantized model with efficient serving (e.g., Llama 3.1 8B, INT8, vLLM)</p>
+</div>
+<div class="paragraph">
+<p><strong>Trade-offs:</strong>
+- ✅ Lower cost (50%+ reduction)
+- ✅ Good accuracy (95%+ retention with quantization)
+- ✅ Acceptable latency (&lt;100ms TTFT with optimization)</p>
+</div>
+<div class="paragraph">
+<p><strong>Use cases:</strong>
+- Production RAG systems
+- Enterprise document Q&amp;A
+- Cost-sensitive deployments</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_real_world_examples"><a class="anchor" href="#_real_world_examples"></a>Real-World Examples</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_example_1_customer_support_chatbot"><a class="anchor" href="#_example_1_customer_support_chatbot"></a>Example 1: Customer Support Chatbot</h3>
+<div class="paragraph">
+<p><strong>Requirements:</strong>
+- Accuracy: High (customer satisfaction depends on correct answers)
+- Latency: Medium (users expect responses within 2-3 seconds)
+- Cost: Must be sustainable at scale</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution:</strong>
+- Model: Llama 3.1 8B quantized (INT8)
+- Serving: vLLM with optimized batching
+- Result: 95% accuracy retention, &lt;2s latency, 50% cost reduction</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_2_real_time_code_assistant"><a class="anchor" href="#_example_2_real_time_code_assistant"></a>Example 2: Real-Time Code Assistant</h3>
+<div class="paragraph">
+<p><strong>Requirements:</strong>
+- Accuracy: Medium (code suggestions, not critical)
+- Latency: Very Low (&lt;500ms for good UX)
+- Cost: Moderate</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution:</strong>
+- Model: Llama 3.2 3B quantized (INT8)
+- Serving: vLLM with prefix caching
+- Result: Fast responses, acceptable accuracy, low cost</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_3_research_document_analysis"><a class="anchor" href="#_example_3_research_document_analysis"></a>Example 3: Research Document Analysis</h3>
+<div class="paragraph">
+<p><strong>Requirements:</strong>
+- Accuracy: Very High (research quality critical)
+- Latency: Low priority (batch processing acceptable)
+- Cost: Secondary concern</p>
+</div>
+<div class="paragraph">
+<p><strong>Solution:</strong>
+- Model: Llama 3.1 70B (FP16)
+- Serving: Standard serving with high memory allocation
+- Result: Maximum accuracy, higher cost, acceptable for use case</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_breaking_the_trinity_optimization_strategies"><a class="anchor" href="#_breaking_the_trinity_optimization_strategies"></a>Breaking the Trinity: Optimization Strategies</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>While you cannot eliminate the trade-offs entirely, you can optimize to achieve better balance across all three dimensions:</p>
+</div>
+<div class="sect2">
+<h3 id="_strategy_1_model_quantization"><a class="anchor" href="#_strategy_1_model_quantization"></a>Strategy 1: Model Quantization</h3>
+<div class="paragraph">
+<p><strong>Technique</strong>: Reduce model precision (FP16 → INT8 → INT4)</p>
+</div>
+<div class="paragraph">
+<p><strong>Impact:</strong>
+- ✅ Cost: 50-75% memory reduction
+- ✅ Latency: 1.5-2x faster inference
+- ⚠️ Accuracy: &lt;5% degradation (typically acceptable)</p>
+</div>
+<div class="paragraph">
+<p><strong>Example</strong>: Llama 3.1 8B INT8 maintains 95%+ accuracy with 50% memory reduction</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_strategy_2_high_performance_serving"><a class="anchor" href="#_strategy_2_high_performance_serving"></a>Strategy 2: High-Performance Serving</h3>
+<div class="paragraph">
+<p><strong>Technique</strong>: Use optimized inference engines (vLLM, llm-d)</p>
+</div>
+<div class="paragraph">
+<p><strong>Impact:</strong>
+- ✅ Latency: 2-4x throughput improvement
+- ✅ Cost: Better GPU utilization (40% → 85-90%)
+- ✅ Accuracy: No degradation</p>
+</div>
+<div class="paragraph">
+<p><strong>Example</strong>: vLLM with PagedAttention achieves 2-4x throughput vs. baseline</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_strategy_3_distributed_inference"><a class="anchor" href="#_strategy_3_distributed_inference"></a>Strategy 3: Distributed Inference</h3>
+<div class="paragraph">
+<p><strong>Technique</strong>: Separate prefill and decode phases (llm-d)</p>
+</div>
+<div class="paragraph">
+<p><strong>Impact:</strong>
+- ✅ Latency: Optimized for each phase
+- ✅ Cost: Independent scaling reduces waste
+- ✅ Accuracy: No degradation</p>
+</div>
+<div class="paragraph">
+<p><strong>Example</strong>: llm-d enables 3-4x throughput for high-concurrency workloads</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_decision_framework"><a class="anchor" href="#_decision_framework"></a>Decision Framework</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When making deployment decisions, consider:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Use Case Requirements</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>What accuracy threshold is acceptable?</p>
+</li>
+<li>
+<p>What latency is required for good UX?</p>
+</li>
+<li>
+<p>What is the cost budget?</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Scale Expectations</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>How many concurrent users?</p>
+</li>
+<li>
+<p>What is the request pattern?</p>
+</li>
+<li>
+<p>What are peak load requirements?</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Optimization Opportunities</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Can quantization be applied?</p>
+</li>
+<li>
+<p>Can serving be optimized?</p>
+</li>
+<li>
+<p>Can infrastructure be shared?</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_key_takeaways"><a class="anchor" href="#_key_takeaways"></a>Key Takeaways</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>The Impossible Trinity is a fundamental constraint in LLM deployments</p>
+</li>
+<li>
+<p>You must make trade-offs, but optimization can improve all dimensions</p>
+</li>
+<li>
+<p>Most deployments can achieve 2-4x improvement through optimization</p>
+</li>
+<li>
+<p>The Lean RAG Accelerator demonstrates how to balance all three effectively</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_next_steps"><a class="anchor" href="#_next_steps"></a>Next Steps</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Review your current deployment&#8217;s trade-off decisions</p>
+</li>
+<li>
+<p>Identify optimization opportunities</p>
+</li>
+<li>
+<p>Proceed to the next section to understand GPU underutilization</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Documentation Gap</strong>: This section would benefit from:
+- Visual diagram of the Impossible Trinity triangle
+- Interactive calculator tool for trade-off decisions
+- Real customer case studies with specific metrics</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="module-1-inference-economics-rhoai-30-architecture.html">Module 1: Inference Economics &amp; RHOAI 3.0 Architecture</a></span>
+  <span class="next"><a href="identifying-critical-gpu-underutilization-and-the-role-of-memory-management-in-inference-costs.html">Identifying "Critical GPU Underutilization" and the Role of Memory Management in Inference Costs</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
